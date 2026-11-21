@@ -10,33 +10,160 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BrandKitRouteImport } from './routes/brand-kit'
+import { Route as JadwalRouteImport } from './routes/jadwal'
+import { Route as KomunitasRouteImport } from './routes/komunitas'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as StoreRouteImport } from './routes/store'
+import { Route as AuthenticatedNotifikasiRouteImport } from './routes/_authenticated/notifikasi'
+import { Route as AuthenticatedTiketRouteImport } from './routes/_authenticated/tiket'
+import { Route as ApiPublicXenditWebhookRouteImport } from './routes/api/public/xendit-webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrandKitRoute = BrandKitRouteImport.update({
+  id: '/brand-kit',
+  path: '/brand-kit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JadwalRoute = JadwalRouteImport.update({
+  id: '/jadwal',
+  path: '/jadwal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KomunitasRoute = KomunitasRouteImport.update({
+  id: '/komunitas',
+  path: '/komunitas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoreRoute = StoreRouteImport.update({
+  id: '/store',
+  path: '/store',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedNotifikasiRoute = AuthenticatedNotifikasiRouteImport.update({
+  id: '/notifikasi',
+  path: '/notifikasi',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTiketRoute = AuthenticatedTiketRouteImport.update({
+  id: '/tiket',
+  path: '/tiket',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicXenditWebhookRoute = ApiPublicXenditWebhookRouteImport.update({
+  id: '/api/public/xendit-webhook',
+  path: '/api/public/xendit-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/brand-kit': typeof BrandKitRoute
+  '/jadwal': typeof JadwalRoute
+  '/komunitas': typeof KomunitasRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/store': typeof StoreRoute
+  '/notifikasi': typeof AuthenticatedNotifikasiRoute
+  '/tiket': typeof AuthenticatedTiketRoute
+  '/api/public/xendit-webhook': typeof ApiPublicXenditWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/brand-kit': typeof BrandKitRoute
+  '/jadwal': typeof JadwalRoute
+  '/komunitas': typeof KomunitasRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/store': typeof StoreRoute
+  '/notifikasi': typeof AuthenticatedNotifikasiRoute
+  '/tiket': typeof AuthenticatedTiketRoute
+  '/api/public/xendit-webhook': typeof ApiPublicXenditWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/brand-kit': typeof BrandKitRoute
+  '/jadwal': typeof JadwalRoute
+  '/komunitas': typeof KomunitasRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/store': typeof StoreRoute
+  '/_authenticated/notifikasi': typeof AuthenticatedNotifikasiRoute
+  '/_authenticated/tiket': typeof AuthenticatedTiketRoute
+  '/api/public/xendit-webhook': typeof ApiPublicXenditWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/brand-kit'
+    | '/jadwal'
+    | '/komunitas'
+    | '/reset-password'
+    | '/store'
+    | '/notifikasi'
+    | '/tiket'
+    | '/api/public/xendit-webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/brand-kit'
+    | '/jadwal'
+    | '/komunitas'
+    | '/reset-password'
+    | '/store'
+    | '/notifikasi'
+    | '/tiket'
+    | '/api/public/xendit-webhook'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/brand-kit'
+    | '/jadwal'
+    | '/komunitas'
+    | '/reset-password'
+    | '/store'
+    | '/_authenticated/notifikasi'
+    | '/_authenticated/tiket'
+    | '/api/public/xendit-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  BrandKitRoute: typeof BrandKitRoute
+  JadwalRoute: typeof JadwalRoute
+  KomunitasRoute: typeof KomunitasRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  StoreRoute: typeof StoreRoute
+  ApiPublicXenditWebhookRoute: typeof ApiPublicXenditWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +175,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/brand-kit': {
+      id: '/brand-kit'
+      path: '/brand-kit'
+      fullPath: '/brand-kit'
+      preLoaderRoute: typeof BrandKitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jadwal': {
+      id: '/jadwal'
+      path: '/jadwal'
+      fullPath: '/jadwal'
+      preLoaderRoute: typeof JadwalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/komunitas': {
+      id: '/komunitas'
+      path: '/komunitas'
+      fullPath: '/komunitas'
+      preLoaderRoute: typeof KomunitasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/store': {
+      id: '/store'
+      path: '/store'
+      fullPath: '/store'
+      preLoaderRoute: typeof StoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/notifikasi': {
+      id: '/_authenticated/notifikasi'
+      path: '/notifikasi'
+      fullPath: '/notifikasi'
+      preLoaderRoute: typeof AuthenticatedNotifikasiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tiket': {
+      id: '/_authenticated/tiket'
+      path: '/tiket'
+      fullPath: '/tiket'
+      preLoaderRoute: typeof AuthenticatedTiketRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/xendit-webhook': {
+      id: '/api/public/xendit-webhook'
+      path: '/api/public/xendit-webhook'
+      fullPath: '/api/public/xendit-webhook'
+      preLoaderRoute: typeof ApiPublicXenditWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedNotifikasiRoute: typeof AuthenticatedNotifikasiRoute
+  AuthenticatedTiketRoute: typeof AuthenticatedTiketRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedNotifikasiRoute: AuthenticatedNotifikasiRoute,
+  AuthenticatedTiketRoute: AuthenticatedTiketRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  BrandKitRoute: BrandKitRoute,
+  JadwalRoute: JadwalRoute,
+  KomunitasRoute: KomunitasRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  StoreRoute: StoreRoute,
+  ApiPublicXenditWebhookRoute: ApiPublicXenditWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
