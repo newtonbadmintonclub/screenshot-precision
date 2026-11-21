@@ -11,13 +11,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ user: null, session: null, loading: true });
 
   useEffect(() => {
+    let mounted = true;
+    let receivedAuthEvent = false;
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      setState({ user: session?.user ?? null, session, loading: false });
+      receivedAuthEvent = true;
+      if (mounted) setState({ user: session?.user ?? null, session, loading: false });
     });
-    supabase.auth.getSession().then(({ data: { session } }) => {
+
+    // getSession is a fallback for initialization only. It must not overwrite a
+    // newer SIGNED_IN / SIGNED_OUT event that arrived while it was resolving.
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (!mounted || receivedAuthEvent) return;
+      if (error) console.error("[Auth] Failed to restore session:", error.message);
       setState({ user: session?.user ?? null, session, loading: false });
+    }).catch((error: unknown) => {
+      if (!mounted || receivedAuthEvent) return;
+      console.error("[Auth] Failed to restore session:", error);
+      setState({ user: null, session: null, loading: false });
     });
-    return () => data.subscription.unsubscribe();
+
+    return () => {
+      mounted = false;
+      data.subscription.unsubscribe();
+    };
   }, []);
 
   return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
