@@ -2,7 +2,6 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Activity,
   Bell,
   Boxes,
   CalendarDays,
@@ -12,7 +11,6 @@ import {
   Clock3,
   LayoutDashboard,
   ListChecks,
-  Package,
   Plus,
   RefreshCw,
   Search,
@@ -232,7 +230,6 @@ function AdminDashboardPage() {
           {activeSection === "overview" ? (
             <OverviewPanel
               cards={cards}
-              stats={stats}
               isLoading={overview.isLoading}
               isFetching={overview.isFetching}
               isError={overview.isError}
@@ -255,7 +252,6 @@ type OverviewCard = { label: string; value: number; icon: typeof CalendarDays; d
 
 function OverviewPanel({
   cards,
-  stats,
   isLoading,
   isFetching,
   isError,
@@ -266,7 +262,6 @@ function OverviewPanel({
   onOpenBookings,
 }: {
   cards: OverviewCard[];
-  stats?: { recentBookings: RecentBooking[] };
   isLoading: boolean;
   isFetching: boolean;
   isError: boolean;
