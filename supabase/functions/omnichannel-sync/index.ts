@@ -52,10 +52,13 @@ Deno.serve(async(req)=>{
  if((channel==="WA Admin → All"||channel==="IG DM")&&!isTrigger&&!isSimulation){await log(channel,"Pesan diterima, tetapi kata kunci trigger tidak ditemukan.","Aman",{sender});return json({ok:true,ignored:true,reason:"trigger_not_found"});}
  const apiKey=Deno.env.get("GEMINI_API_KEY");
  if(!apiKey){await log(channel,"Parser AI belum dikonfigurasi. Tambahkan GEMINI_API_KEY pada Secrets Supabase.","Gagal");return json({error:"GEMINI_API_KEY belum dikonfigurasi"},503);}
- const prompt=channel==="WA Grup → DB"||body.mode==="group"
- ? "Parse teks roster WhatsApp badminton berikut. Kembalikan JSON valid saja dengan schema {event_title:string|null,event_date:string|null,closed:boolean,players:[{position:number,name:string}],waiting_list:[{position:number,name:string}]}. Ambil hanya nama pemain bernomor 1-26, deteksi CLOSED, pisahkan Waiting List. Jangan mengarang data.\n\n"+text
- : "Parse pesan konfirmasi pendaftaran berikut. Kembalikan JSON valid saja dengan schema {trigger_detected:boolean,player_name:string|null,schedule:string|null,whatsapp:string|null}. Jangan mengarang data.\n\n"+text;
- const ai=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(apiKey),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:0.1}})});
+ const {data:agent}=await admin.from("ai_agent_profiles").select("name,model,system_prompt,is_active,temperature,max_output_tokens").eq("agent_key","newton-main").maybeSingle();
+ const taskPrompt=channel==="WA Grup → DB"||body.mode==="group"
+ ? "Parse teks roster WhatsApp badminton berikut. Kembalikan JSON valid saja dengan schema {event_title:string|null,event_date:string|null,closed:boolean,players:[{position:number,name:string}],waiting_list:[{position:number,name:string}]}. Ambil hanya nama pemain bernomor 1-26, deteksi CLOSED, pisahkan Waiting List. Jangan mengarang data.\\n\\n"+text
+ : "Parse pesan konfirmasi pendaftaran berikut. Kembalikan JSON valid saja dengan schema {trigger_detected:boolean,player_name:string|null,schedule:string|null,whatsapp:string|null}. Jangan mengarang data.\\n\\n"+text;
+ const prompt=(agent?.system_prompt??"Kamu adalah parser data Newton Badminton Club. Jangan mengarang data.")+"\\n\\nTugas parsing: "+taskPrompt;
+ const model=String(agent?.model??"gemini-2.5-flash").replace(/^models\\//,"");
+ const ai=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(apiKey),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:Number(agent?.temperature??0.1),maxOutputTokens:Number(agent?.max_output_tokens??700)}})});
  if(!ai.ok){const detail=await ai.text();await log(channel,"Gemini gagal memproses pesan.", "Gagal",{http_status:ai.status});return json({error:"Parser AI gagal",detail:detail.slice(0,500)},502);}
  const aiData=await ai.json();const raw=aiData.candidates?.[0]?.content?.parts?.[0]?.text??"{}";
  let parsed:Record<string,any>;try{parsed=JSON.parse(raw);}catch{await log(channel,"Hasil parser AI bukan JSON yang valid.","Gagal");return json({error:"Hasil parser tidak valid"} ,502);}
