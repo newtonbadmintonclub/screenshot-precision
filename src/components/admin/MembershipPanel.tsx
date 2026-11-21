@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Activity, ChevronLeft, ChevronRight, Download, Eye, Pencil, Plus, Search,
-  SlidersHorizontal, Users, X,
+  Activity, ArrowLeft, CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, Clock3, Download, Eye, MapPin, Pencil, Phone, Plus, Search,
+  SlidersHorizontal, Trophy, Users, X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -220,26 +220,100 @@ export function MembershipPanel() {
       </Card>
 
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-label="Detail pemain" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}>
-          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
-            <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-wider text-teal-700">Database Membership</p><h2 className="mt-1 text-xl font-extrabold text-[#142b4d]">{editing ? "Edit Profil Pemain" : selected.full_name}</h2><p className="mt-1 text-xs text-slate-500">ID NWT-{selected.id.slice(0, 6).toUpperCase()}</p></div><Button variant="ghost" size="icon" onClick={() => setSelected(null)} aria-label="Tutup"><X /></Button></div>
-            {editing ? (
-              <form className="mt-5 space-y-4" onSubmit={(event) => { event.preventDefault(); updateProfile.mutate(); }}>
-                <Field label="Nama lengkap"><input required value={draft.full_name} onChange={(event) => setDraft({ ...draft, full_name: event.target.value })} className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500" /></Field>
-                <Field label="Nomor WhatsApp"><input value={draft.whatsapp} onChange={(event) => setDraft({ ...draft, whatsapp: event.target.value })} className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500" /></Field>
-                <Field label="Level skill"><select value={draft.level} onChange={(event) => setDraft({ ...draft, level: event.target.value })} className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm">{LEVELS.map((item) => <option key={item} value={item}>{item}</option>)}</select></Field>
-                {updateProfile.isError && <p className="text-sm text-red-600">{updateProfile.error.message}</p>}
-                <div className="flex justify-end gap-2 pt-2"><Button type="button" variant="outline" onClick={() => setEditing(false)}>Batal</Button><Button type="submit" disabled={updateProfile.isPending} className="bg-[#142b4d] text-white">{updateProfile.isPending ? "Menyimpan..." : "Simpan Perubahan"}</Button></div>
-              </form>
-            ) : (
-              <div className="mt-5 space-y-4">
-                <div className="grid grid-cols-2 gap-3"><Info label="WhatsApp" value={selected.whatsapp || "Belum diisi"} /><Info label="Level" value={selected.level} /><Info label="Tanggal bergabung" value={dateLabel(selected.created_at)} /><Info label="Total booking terkonfirmasi" value={(byUser.get(selected.id) ?? []).filter((item) => item.status === "confirmed").length.toString()} /></div>
-                <div className="rounded-xl border border-slate-100 p-4"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Riwayat mabar terbaru</p>{(byUser.get(selected.id) ?? []).filter((item) => item.status === "confirmed").slice(0, 5).map((item, index) => <div key={`${item.created_at}-${index}`} className="flex items-center justify-between gap-3 border-b border-slate-100 py-3 last:border-0"><span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-700">{item.events?.title ?? "Sesi mabar"}</span><span className="text-xs text-slate-500">{item.events?.venue ?? "Lokasi belum tersedia"}</span></span><span className="whitespace-nowrap text-xs text-slate-500">{dateLabel(item.created_at)}</span></div>)}{!(byUser.get(selected.id) ?? []).some((item) => item.status === "confirmed") && <p className="py-3 text-sm text-slate-500">Belum ada riwayat booking terkonfirmasi.</p>}</div>
-                <div className="flex justify-end"><Button onClick={() => setEditing(true)} className="bg-[#142b4d] text-white"><Pencil className="mr-2 h-4 w-4" /> Edit Profil</Button></div>
-              </div>
-            )}
+        <section className="space-y-5" aria-label={`Detail pemain ${selected.full_name}`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Button variant="ghost" onClick={() => { setSelected(null); setEditing(false); }} className="-ml-2 text-slate-600">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Kembali ke Database Pemain
+            </Button>
+            <div className="flex gap-2">
+              {!editing ? <Button onClick={() => setEditing(true)} className="bg-[#142b4d] text-white hover:bg-[#203d65]"><Pencil className="mr-2 h-4 w-4" /> Edit Profil</Button> : null}
+            </div>
           </div>
-        </div>
+
+          <Card className="overflow-hidden rounded-2xl border-slate-200 bg-white shadow-sm">
+            <div className="h-2 bg-gradient-to-r from-[#142b4d] via-teal-500 to-cyan-400" />
+            <CardContent className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[1.35fr_1fr]">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                <div className="grid h-28 w-28 shrink-0 place-items-center rounded-full border-4 border-teal-50 bg-[#e5f0f2] font-display text-3xl font-extrabold text-[#142b4d] shadow-inner">{initials(selected.full_name)}</div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-teal-700">Newton Badminton Club • Membership</p>
+                  {editing ? (
+                    <form className="mt-3 grid gap-3 sm:grid-cols-2" onSubmit={(event) => { event.preventDefault(); updateProfile.mutate(); }}>
+                      <Field label="Nama lengkap"><input required value={draft.full_name} onChange={(event) => setDraft({ ...draft, full_name: event.target.value })} className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500" /></Field>
+                      <Field label="Nomor WhatsApp"><input value={draft.whatsapp} onChange={(event) => setDraft({ ...draft, whatsapp: event.target.value })} className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500" /></Field>
+                      <Field label="Level skill"><select value={draft.level} onChange={(event) => setDraft({ ...draft, level: event.target.value })} className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm">{LEVELS.map((item) => <option key={item} value={item}>{item}</option>)}</select></Field>
+                      <div className="flex items-end gap-2"><Button type="submit" disabled={updateProfile.isPending} className="bg-[#142b4d] text-white">{updateProfile.isPending ? "Menyimpan..." : "Simpan"}</Button><Button type="button" variant="outline" onClick={() => { setEditing(false); setDraft({ full_name: selected.full_name, whatsapp: selected.whatsapp, level: selected.level || "BEGINNER" }); }}>Batal</Button></div>
+                      {updateProfile.isError && <p className="text-sm text-red-600 sm:col-span-2">{updateProfile.error.message}</p>}
+                    </form>
+                  ) : (
+                    <>
+                      <h2 className="mt-2 truncate font-display text-3xl font-extrabold text-[#142b4d]">{selected.full_name || "Pemain tanpa nama"}</h2>
+                      <p className="mt-1 text-sm text-slate-500">ID Pemain NWT-{selected.id.slice(0, 6).toUpperCase()}</p>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <Badge className={selected.level === "ADVANCE" ? "bg-teal-600" : selected.level === "INTERMEDIATE" ? "bg-orange-500" : "bg-sky-600"}>{selected.level || "GUEST"}</Badge>
+                        <Badge variant="outline" className={(() => { const last = (byUser.get(selected.id) ?? []).filter((item) => item.status === "confirmed")[0]?.created_at; return last && new Date(last) >= ninetyDaysAgo ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-100 text-slate-500"; })()}>{(() => { const last = (byUser.get(selected.id) ?? []).filter((item) => item.status === "confirmed")[0]?.created_at; return last && new Date(last) >= ninetyDaysAgo ? "Aktif" : "Pasif"; })()}</Badge>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="grid content-center gap-3 sm:grid-cols-2">
+                <Info label="Nomor WhatsApp" value={selected.whatsapp || "Belum diisi"} />
+                <Info label="Tanggal bergabung" value={dateLabel(selected.created_at)} />
+                <Info label="Level skill" value={selected.level || "GUEST"} />
+                <Info label="ID akun" value={selected.id.slice(0, 8).toUpperCase()} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {(() => {
+            const playerBookings = (byUser.get(selected.id) ?? []).filter((item) => item.status === "confirmed");
+            const lastBooking = playerBookings[0];
+            const nextBooking = playerBookings.find((item) => item.events?.starts_at && new Date(item.events.starts_at) >= new Date());
+            const attendanceMonths = Array.from({ length: 6 }, (_, index) => {
+              const date = new Date(); date.setDate(1); date.setMonth(date.getMonth() - (5 - index));
+              const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+              const count = playerBookings.filter((item) => item.created_at.slice(0, 7) === key).length;
+              return { label: new Intl.DateTimeFormat("id-ID", { month: "short" }).format(date), count };
+            });
+            const maxAttendance = Math.max(1, ...attendanceMonths.map((item) => item.count));
+            return (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <StatCard label="Total Mabar" value={playerBookings.length.toLocaleString("id-ID")} icon={<Trophy />} tint="purple" note="Booking terkonfirmasi" />
+                  <StatCard label="Terakhir Mabar" value={lastBooking ? dateLabel(lastBooking.created_at) : "—"} icon={<Clock3 />} tint="blue" note="Aktivitas terakhir tercatat" />
+                  <StatCard label="Bergabung" value={dateLabel(selected.created_at)} icon={<CalendarCheck />} tint="green" note="Tanggal akun dibuat" />
+                  <StatCard label="Level Skill" value={selected.level || "GUEST"} icon={<Activity />} tint="orange" note="Klasifikasi pemain saat ini" />
+                </div>
+
+                <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+                  <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+                    <CardHeader><CardTitle className="font-display text-lg text-[#142b4d]">Tren Kehadiran</CardTitle><p className="text-sm text-slate-500">Booking terkonfirmasi per bulan dalam enam bulan terakhir.</p></CardHeader>
+                    <CardContent>
+                      <div className="flex h-44 items-end justify-between gap-3 border-b border-slate-200 px-2 pb-2">
+                        {attendanceMonths.map((month) => <div key={month.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2"><span className="text-xs font-semibold text-slate-600">{month.count}</span><div className="w-full max-w-12 rounded-t-lg bg-gradient-to-t from-[#142b4d] to-teal-400" style={{ height: `${Math.max(6, (month.count / maxAttendance) * 112)}px` }} /><span className="text-[11px] text-slate-500">{month.label}</span></div>)}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+                    <CardHeader><CardTitle className="font-display text-lg text-[#142b4d]">Mabar Berikutnya</CardTitle></CardHeader>
+                    <CardContent>
+                      {nextBooking ? <div className="rounded-xl bg-teal-50 p-4"><p className="font-bold text-[#142b4d]">{nextBooking.events?.title ?? "Sesi mabar"}</p><p className="mt-2 flex items-center gap-2 text-sm text-slate-600"><CalendarDays className="h-4 w-4" />{dateLabel(nextBooking.events?.starts_at)}</p><p className="mt-2 flex items-center gap-2 text-sm text-slate-600"><MapPin className="h-4 w-4" />{nextBooking.events?.venue ?? "Lokasi belum tersedia"}</p></div> : <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">Belum ada booking mendatang yang terkonfirmasi.</div>}
+                      <div className="mt-4 rounded-xl bg-slate-50 p-4"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Kontak pemain</p><p className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-700"><Phone className="h-4 w-4 text-teal-600" />{selected.whatsapp || "Nomor WhatsApp belum tersedia"}</p></div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card className="overflow-hidden rounded-2xl border-slate-200 bg-white shadow-sm">
+                  <CardHeader><CardTitle className="font-display text-lg text-[#142b4d]">Riwayat Mabar</CardTitle><p className="text-sm text-slate-500">Daftar booking terkonfirmasi milik pemain ini.</p></CardHeader>
+                  <CardContent className="p-0">
+                    {playerBookings.length ? <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-left text-sm"><thead className="bg-slate-50 text-xs text-slate-500"><tr><th className="px-5 py-3">Sesi</th><th className="px-5 py-3">Lokasi</th><th className="px-5 py-3">Tanggal booking</th><th className="px-5 py-3">Tanggal sesi</th><th className="px-5 py-3">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{playerBookings.map((item, index) => <tr key={`${item.created_at}-${index}`}><td className="px-5 py-3 font-semibold text-slate-800">{item.events?.title ?? "Sesi mabar"}</td><td className="px-5 py-3 text-slate-600">{item.events?.venue ?? "—"}</td><td className="px-5 py-3 text-slate-600">{dateLabel(item.created_at)}</td><td className="px-5 py-3 text-slate-600">{dateLabel(item.events?.starts_at)}</td><td className="px-5 py-3"><Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">Terkonfirmasi</Badge></td></tr>)}</tbody></table></div> : <p className="p-8 text-center text-sm text-slate-500">Belum ada riwayat mabar terkonfirmasi.</p>}
+                  </CardContent>
+                </Card>
+              </>
+            );
+          })()}
+        </section>
       )}
 
       {showAddInfo && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowAddInfo(false); }}><div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"><div className="flex justify-between"><h2 className="text-lg font-bold text-[#142b4d]">Tambah Pemain</h2><Button variant="ghost" size="icon" onClick={() => setShowAddInfo(false)}><X /></Button></div><p className="mt-3 text-sm leading-relaxed text-slate-600">Profil Membership terhubung ke akun pemain. Untuk menjaga integritas akun dan keamanan akses, pemain perlu mendaftar atau dibuatkan akun terlebih dahulu. Setelah akun tersedia, profilnya akan muncul otomatis di database ini.</p><div className="mt-5 flex justify-end"><Button onClick={() => setShowAddInfo(false)} className="bg-[#142b4d] text-white">Mengerti</Button></div></div></div>}
