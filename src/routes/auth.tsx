@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Loader2, MailCheck } from "lucide-react";
-import { LovableMark } from "@lovable.dev/cloud-auth-js/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { logoUrl } from "@/components/site/Logo";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/use-auth";
 import { BRAND, LEVELS, type Level } from "@/lib/brand";
 import { safeRedirect } from "@/lib/safe-redirect";
@@ -70,18 +68,18 @@ function AuthPage() {
     if (!loading && user) navigate({ to: target, replace: true });
   }, [user, loading, target, navigate]);
 
-  async function oauth(provider: "google" | "lovable") {
+  async function oauth() {
     setBusy(true);
-    const result = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: `${window.location.origin}/auth?redirect=${encodeURIComponent(target)}`,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth?redirect=${encodeURIComponent(target)}`,
+      },
     });
-    if (result.error) {
-      toast.error("Gagal masuk. Coba lagi ya.");
+    if (error) {
+      toast.error(error.message || "Gagal masuk dengan Google. Coba lagi ya.");
       setBusy(false);
-      return;
     }
-    if (result.redirected) return;
-    setBusy(false);
   }
 
   async function signIn(e: React.FormEvent) {
@@ -158,11 +156,8 @@ function AuthPage() {
                 <p className="text-sm text-muted-foreground">Masuk untuk daftar mabar & lihat E-Ticket.</p>
               </div>
               <div className="grid gap-2">
-                <Button type="button" variant="outline" size="lg" onClick={() => oauth("google")} disabled={busy}>
+                <Button type="button" variant="outline" size="lg" onClick={() => oauth()} disabled={busy}>
                   <GoogleLogo /> Continue with Google
-                </Button>
-                <Button type="button" variant="outline" size="lg" onClick={() => oauth("lovable")} disabled={busy}>
-                  <LovableMark /> Continue with Lovable
                 </Button>
               </div>
               <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
