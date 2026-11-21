@@ -28,17 +28,16 @@ export function SiteHeader() {
   const { data: unread = 0 } = useUnreadCount();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { data: currentRole } = useQuery({
+  const { data: hasAdminAccess = false } = useQuery({
     queryKey: ["current-role", user?.id],
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", user!.id)
-        .maybeSingle();
+        .eq("user_id", user!.id);
       if (error) throw error;
-      return data?.role ?? null;
+      return (data ?? []).some(({ role }) => role === "admin");
     },
   });
 
@@ -113,7 +112,7 @@ export function SiteHeader() {
                       <Bell /> Notifikasi
                     </Link>
                   </DropdownMenuItem>
-                  {currentRole === "admin" && (
+                  {hasAdminAccess && (
                     <>
                       <DropdownMenuItem asChild>
                         <Link to="/admin">

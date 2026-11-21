@@ -65,15 +65,43 @@ function AuthPage() {
   const [level, setLevel] = useState<Level>("Intermediate");
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: target, replace: true });
-  }, [user, loading, target, navigate]);
+    if (loading || !user) return;
+
+    let cancelled = false;
+    const redirectAfterLogin = async () => {
+      if (typeof search.redirect === "string") {
+        navigate({ to: target, replace: true });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+
+      if (cancelled) return;
+      if (error) {
+        console.error("[Auth] Failed to resolve post-login role:", error.message);
+        navigate({ to: "/tiket", replace: true });
+        return;
+      }
+
+      const isAdmin = (data ?? []).some(({ role }) => role === "admin");
+      navigate({ to: isAdmin ? "/admin" : "/tiket", replace: true });
+    };
+
+    void redirectAfterLogin();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, loading, search.redirect, target, navigate]);
 
   async function oauth() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth?redirect=${encodeURIComponent(target)}`,
+        redirectTo: `${window.location.origin}/auth${typeof search.redirect === "string" ? `?redirect=${encodeURIComponent(target)}` : ""}`,
       },
     });
     if (error) {
@@ -102,7 +130,7 @@ function AuthPage() {
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth?redirect=${encodeURIComponent(target)}`,
+        emailRedirectTo: `${window.location.origin}/auth${typeof search.redirect === "string" ? `?redirect=${encodeURIComponent(target)}` : ""}`,
         data: { full_name: parsed.data.fullName, whatsapp: parsed.data.whatsapp, level },
       },
     });
