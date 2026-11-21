@@ -47,10 +47,9 @@ function useAdminAccess() {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", user!.id)
-        .maybeSingle();
+        .eq("user_id", user!.id);
       if (error) throw error;
-      return data?.role ?? null;
+      return (data ?? []).some(({ role }) => role === "admin");
     },
   });
 }
@@ -100,7 +99,7 @@ const STATUS_LABEL: Record<string, string> = {
 function AdminDashboardPage() {
   const { user, loading } = useAuth();
   const access = useAdminAccess();
-  const isAdmin = access.data === "admin";
+  const isAdmin = access.data === true;
   const overview = useAdminOverview(isAdmin);
 
   if (loading || access.isLoading) {
