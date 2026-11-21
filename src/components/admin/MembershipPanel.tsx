@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Activity, ArrowDown, ArrowUp, CalendarDays, CheckCircle2, ChevronLeft,
-  ChevronRight, Clock3, Download, Eye, Pencil, Plus, Search, SlidersHorizontal,
-  UserRound, Users, X,
+  Activity, ChevronLeft, ChevronRight, Download, Eye, Pencil, Plus, Search,
+  SlidersHorizontal, Users, X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
