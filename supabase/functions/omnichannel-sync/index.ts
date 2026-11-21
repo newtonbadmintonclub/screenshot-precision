@@ -57,7 +57,7 @@ Deno.serve(async(req)=>{
  ? "Parse teks roster WhatsApp badminton berikut. Kembalikan JSON valid saja dengan schema {event_title:string|null,event_date:string|null,closed:boolean,players:[{position:number,name:string}],waiting_list:[{position:number,name:string}]}. Ambil hanya nama pemain bernomor 1-26, deteksi CLOSED, pisahkan Waiting List. Jangan mengarang data.\\n\\n"+text
  : "Parse pesan konfirmasi pendaftaran berikut. Kembalikan JSON valid saja dengan schema {trigger_detected:boolean,player_name:string|null,schedule:string|null,whatsapp:string|null}. Jangan mengarang data.\\n\\n"+text;
  const prompt=(agent?.system_prompt??"Kamu adalah parser data Newton Badminton Club. Jangan mengarang data.")+"\\n\\nTugas parsing: "+taskPrompt;
- const model=String(agent?.model??"gemini-2.5-flash").replace(/^models\\//,"");
+ const model=String(agent?.model??"gemini-2.5-flash").replace("models/","");
  const ai=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(apiKey),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",temperature:Number(agent?.temperature??0.1),maxOutputTokens:Number(agent?.max_output_tokens??700)}})});
  if(!ai.ok){const detail=await ai.text();await log(channel,"Gemini gagal memproses pesan.", "Gagal",{http_status:ai.status});return json({error:"Parser AI gagal",detail:detail.slice(0,500)},502);}
  const aiData=await ai.json();const raw=aiData.candidates?.[0]?.content?.parts?.[0]?.text??"{}";
