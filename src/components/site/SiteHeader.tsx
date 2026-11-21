@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { Bell, LogOut, Ticket, UserRound } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Bell, LogOut, ShieldCheck, Ticket, UserRound } from "lucide-react";
 import { Logo } from "./Logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,19 @@ export function SiteHeader() {
   const { data: unread = 0 } = useUnreadCount();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { data: currentRole } = useQuery({
+    queryKey: ["current-role", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.role ?? null;
+    },
+  });
 
   async function handleSignOut() {
     await queryClient.cancelQueries();
@@ -100,7 +113,16 @@ export function SiteHeader() {
                       <Bell /> Notifikasi
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  {currentRole === "admin" && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin">
+                          <ShieldCheck /> Dashboard Admin
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem onSelect={handleSignOut}>
                     <LogOut /> Keluar
                   </DropdownMenuItem>
