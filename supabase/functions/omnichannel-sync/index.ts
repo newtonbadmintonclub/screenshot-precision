@@ -14,7 +14,7 @@ Deno.serve(async(req)=>{
  const isSimulation=source==="simulation";
  if(isSimulation){
   const token=auth.replace(/^Bearer\s+/i,"");
-  const client=createClient(url,Deno.env.get("SUPABASE_ANON_KEY")??"");
+  const client=createClient(url,Deno.env.get("SUPABASE_ANON_KEY")??Deno.env.get("SUPABASE_PUBLISHABLE_KEY")??"");
   const {data:{user}}=await client.auth.getUser(token);
   if(!user)return json({error:"Sesi Admin tidak valid"},401);
   const {data:roles}=await admin.from("user_roles").select("role").eq("user_id",user.id);
