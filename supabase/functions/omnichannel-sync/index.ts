@@ -25,6 +25,16 @@ Deno.serve(async(req)=>{
  }
  const {data:settingsData}=await admin.from("ai_sync_settings").select("*").eq("id","00000000-0000-4000-8000-000000000001").maybeSingle();
  const settings=(settingsData??{}) as Setting;
+ const {data:agent}=await admin.from("ai_agent_profiles").select("name,model,system_prompt,is_active,temperature,max_output_tokens").eq("agent_key","newton-main").maybeSingle();
+ const geminiConfigured=!!Deno.env.get("GEMINI_API_KEY");
+ const wahaConfigured=!!(Deno.env.get("WAHA_BASE_URL")&&Deno.env.get("WAHA_API_KEY"));
+ const metaConfigured=!!(Deno.env.get("META_PAGE_ACCESS_TOKEN")&&Deno.env.get("META_VERIFY_TOKEN"));
+ await Promise.all([
+  admin.from("ai_integration_status").update({configured:geminiConfigured,last_checked_at:new Date().toISOString(),last_error:geminiConfigured?null:"GEMINI_API_KEY belum diset"}).eq("provider","gemini"),
+  admin.from("ai_integration_status").update({configured:wahaConfigured,last_checked_at:new Date().toISOString(),last_error:wahaConfigured?null:"WAHA secrets belum lengkap"}).eq("provider","waha"),
+  admin.from("ai_integration_status").update({configured:metaConfigured,last_checked_at:new Date().toISOString(),last_error:metaConfigured?null:"Meta secrets belum lengkap"}).eq("provider","meta_instagram")
+ ]);
+ if(!isSimulation&&agent?.is_active!==true)return json({error:"AI Agent belum diaktifkan dari halaman Setup."},409);
  const text=String(body.text??body.message?.text??body.body??body.entry?.[0]?.messaging?.[0]?.message?.text??"");
  const sender=String(body.sender??body.from??body.key?.remoteJid??body.message?.from??"");
  const normalized=(v:string)=>v.replace(/\D/g,"").replace(/^0/,"62");
