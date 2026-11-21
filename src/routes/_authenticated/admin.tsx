@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
+  Bot,
   Boxes,
   CalendarDays,
   CheckCircle2,
@@ -55,6 +56,7 @@ type RecentBooking = {
 const ADMIN_MENU = [
   { id: "overview", label: "Overview", icon: LayoutDashboard, description: "Ringkasan aktivitas klub" },
   { id: "membership", label: "Membership", icon: Users, description: "Database dan status keanggotaan pemain" },
+  { id: "ai-sync", label: "AI Agent & Omnichannel Sync", icon: Bot, description: "Otomatisasi sinkronisasi lintas kanal" },
   { id: "events", label: "Jadwal Mabar", icon: CalendarDays, description: "Kelola sesi dan jadwal bermain" },
   { id: "bookings", label: "Booking", icon: Ticket, description: "Pendaftaran dan transaksi booking" },
   { id: "waiting-list", label: "Waiting List", icon: ListChecks, description: "Antrean peserta pada sesi penuh" },
@@ -172,7 +174,7 @@ function AdminDashboardPage() {
                 <button
                   key={id}
                   type="button"
-                  onClick={() => setActiveSection(id)}
+                  onClick={() => id === "ai-sync" ? window.location.assign("/admin/ai-sync") : setActiveSection(id)}
                   aria-current={active ? "page" : undefined}
                   className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-semibold transition-colors ${active ? "bg-[#142b4d] text-white shadow-sm" : "text-slate-700 hover:bg-slate-100 hover:text-[#142b4d]"}`}
                 >
@@ -223,7 +225,7 @@ function AdminDashboardPage() {
 
           <div className="mb-5 flex gap-2 overflow-x-auto pb-1 lg:hidden">
             {ADMIN_MENU.map(({ id, label, icon: Icon }) => (
-              <button key={id} type="button" onClick={() => setActiveSection(id)} className={`flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ${activeSection === id ? "bg-[#142b4d] text-white" : "border border-slate-200 bg-white text-slate-600"}`}>
+              <button key={id} type="button" onClick={() => id === "ai-sync" ? window.location.assign("/admin/ai-sync") : setActiveSection(id)} className={`flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ${activeSection === id ? "bg-[#142b4d] text-white" : "border border-slate-200 bg-white text-slate-600"}`}>
                 <Icon className="h-4 w-4" />{label}
               </button>
             ))}
