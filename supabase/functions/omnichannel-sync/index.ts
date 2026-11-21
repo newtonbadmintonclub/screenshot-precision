@@ -52,7 +52,7 @@ Deno.serve(async(req)=>{
  if((channel==="WA Admin → All"||channel==="IG DM")&&!isTrigger&&!isSimulation){await log(channel,"Pesan diterima, tetapi kata kunci trigger tidak ditemukan.","Aman",{sender});return json({ok:true,ignored:true,reason:"trigger_not_found"});}
  const apiKey=Deno.env.get("GEMINI_API_KEY");
  if(!apiKey){await log(channel,"Parser AI belum dikonfigurasi. Tambahkan GEMINI_API_KEY pada Secrets Supabase.","Gagal");return json({error:"GEMINI_API_KEY belum dikonfigurasi"},503);}
- const {data:agent}=await admin.from("ai_agent_profiles").select("name,model,system_prompt,is_active,temperature,max_output_tokens").eq("agent_key","newton-main").maybeSingle();
+
  const taskPrompt=channel==="WA Grup → DB"||body.mode==="group"
  ? "Parse teks roster WhatsApp badminton berikut. Kembalikan JSON valid saja dengan schema {event_title:string|null,event_date:string|null,closed:boolean,players:[{position:number,name:string}],waiting_list:[{position:number,name:string}]}. Ambil hanya nama pemain bernomor 1-26, deteksi CLOSED, pisahkan Waiting List. Jangan mengarang data.\\n\\n"+text
  : "Parse pesan konfirmasi pendaftaran berikut. Kembalikan JSON valid saja dengan schema {trigger_detected:boolean,player_name:string|null,schedule:string|null,whatsapp:string|null}. Jangan mengarang data.\\n\\n"+text;
