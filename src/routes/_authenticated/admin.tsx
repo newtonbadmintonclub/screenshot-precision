@@ -29,6 +29,7 @@ import { Logo } from "@/components/site/Logo";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDateTime, formatRp } from "@/lib/brand";
 import { supabase } from "@/integrations/supabase/client";
+import { MembershipPanel } from "@/components/admin/MembershipPanel";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -227,7 +228,9 @@ function AdminDashboardPage() {
             ))}
           </div>
 
-          {activeSection === "overview" ? (
+          {activeSection === "membership" ? (
+            <MembershipPanel />
+          ) : activeSection === "overview" ? (
             <OverviewPanel
               cards={cards}
               isLoading={overview.isLoading}
