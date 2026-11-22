@@ -273,7 +273,7 @@ function OverviewPanel({
   isLoading: boolean;
   isFetching: boolean;
   isError: boolean;
-  errorMessage?: string;
+  errorMessage?: string | undefined;
   recentBookings: RecentBooking[];
   onRefresh: () => void;
   onOpenMembership: () => void;
@@ -358,6 +358,7 @@ function SectionPlaceholder({ section, title, description, onBack }: { section: 
     finance: "Pantau pembayaran, pemasukan, pengeluaran, dan laporan keuangan klub.",
     inventory: "Catat perlengkapan klub, jumlah stok, kondisi, dan pergerakan inventaris.",
     store: "Kelola katalog produk, stok toko, pesanan, dan penjualan Club Store.",
+    "ai-sync": "Sinkronisasi pesan omnichannel dengan bantuan AI.",
   };
   return (
     <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">

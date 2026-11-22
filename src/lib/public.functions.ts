@@ -1,21 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { keyFetch, newtonDbConfig } from "./newton-db";
 
 function publicClient() {
-  const url = process.env["SUPABASE_URL"] || import.meta.env.VITE_SUPABASE_URL;
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"] || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new Error("Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY");
-  return createClient<Database>(url, key, {
+  const { url, publishableKey } = newtonDbConfig();
+  return createClient<Database>(url, publishableKey, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
+    global: { fetch: keyFetch(publishableKey) },
   });
 }
 

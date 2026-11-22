@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireNewtonAuth } from "./newton-auth";
 
 export type QrisResult =
   | { state: "confirmed" }
@@ -9,7 +9,7 @@ export type QrisResult =
   | { state: "unavailable"; message: string };
 
 export const startQrisPayment = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireNewtonAuth])
   .inputValidator((input: unknown) => z.object({ bookingId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<QrisResult> => {
     const { data: b, error } = await context.supabase
@@ -31,8 +31,8 @@ export const startQrisPayment = createServerFn({ method: "POST" })
     const { createXenditQr, XenditNotConfiguredError } = await import("./xendit.server");
     try {
       const qr = await createXenditQr({ referenceId: b.code, amount: b.amount, expiresAt: b.payment_expires_at });
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { error: upErr } = await supabaseAdmin
+      const { newtonAdmin } = await import("./newton-admin.server");
+      const { error: upErr } = await newtonAdmin()
         .from("bookings")
         .update({ xendit_qr_id: qr.id, qr_string: qr.qr_string })
         .eq("id", b.id)

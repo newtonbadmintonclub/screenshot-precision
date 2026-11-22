@@ -41,8 +41,8 @@ export const Route = createFileRoute("/api/public/xendit-webhook")({
           return new Response("Ignored", { status: 200 });
         }
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { error } = await supabaseAdmin.rpc("confirm_qris_payment", {
+        const { newtonAdmin } = await import("@/lib/newton-admin.server");
+        const { error } = await newtonAdmin().rpc("confirm_qris_payment", {
           _qr_id: data.qr_id,
           _reference: data.reference_id,
           _amount: Math.round(data.amount),

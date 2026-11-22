@@ -17,9 +17,12 @@ import { Route as JadwalRouteImport } from './routes/jadwal'
 import { Route as KomunitasRouteImport } from './routes/komunitas'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StoreRouteImport } from './routes/store'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedNotifikasiRouteImport } from './routes/_authenticated/notifikasi'
 import { Route as AuthenticatedTiketRouteImport } from './routes/_authenticated/tiket'
+import { Route as AuthenticatedAdminAiSyncRouteImport } from './routes/_authenticated/admin/ai-sync'
 import { Route as ApiPublicXenditWebhookRouteImport } from './routes/api/public/xendit-webhook'
+import { Route as AuthenticatedAdminAiSyncSetupRouteImport } from './routes/_authenticated/admin/ai-sync/setup'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -60,6 +63,11 @@ const StoreRoute = StoreRouteImport.update({
   path: '/store',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedNotifikasiRoute = AuthenticatedNotifikasiRouteImport.update({
   id: '/notifikasi',
   path: '/notifikasi',
@@ -70,11 +78,23 @@ const AuthenticatedTiketRoute = AuthenticatedTiketRouteImport.update({
   path: '/tiket',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminAiSyncRoute =
+  AuthenticatedAdminAiSyncRouteImport.update({
+    id: '/ai-sync',
+    path: '/ai-sync',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const ApiPublicXenditWebhookRoute = ApiPublicXenditWebhookRouteImport.update({
   id: '/api/public/xendit-webhook',
   path: '/api/public/xendit-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminAiSyncSetupRoute =
+  AuthenticatedAdminAiSyncSetupRouteImport.update({
+    id: '/setup',
+    path: '/setup',
+    getParentRoute: () => AuthenticatedAdminAiSyncRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -84,9 +104,12 @@ export interface FileRoutesByFullPath {
   '/komunitas': typeof KomunitasRoute
   '/reset-password': typeof ResetPasswordRoute
   '/store': typeof StoreRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/notifikasi': typeof AuthenticatedNotifikasiRoute
   '/tiket': typeof AuthenticatedTiketRoute
+  '/admin/ai-sync': typeof AuthenticatedAdminAiSyncRouteWithChildren
   '/api/public/xendit-webhook': typeof ApiPublicXenditWebhookRoute
+  '/admin/ai-sync/setup': typeof AuthenticatedAdminAiSyncSetupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -96,9 +119,12 @@ export interface FileRoutesByTo {
   '/komunitas': typeof KomunitasRoute
   '/reset-password': typeof ResetPasswordRoute
   '/store': typeof StoreRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/notifikasi': typeof AuthenticatedNotifikasiRoute
   '/tiket': typeof AuthenticatedTiketRoute
+  '/admin/ai-sync': typeof AuthenticatedAdminAiSyncRouteWithChildren
   '/api/public/xendit-webhook': typeof ApiPublicXenditWebhookRoute
+  '/admin/ai-sync/setup': typeof AuthenticatedAdminAiSyncSetupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -110,9 +136,12 @@ export interface FileRoutesById {
   '/komunitas': typeof KomunitasRoute
   '/reset-password': typeof ResetPasswordRoute
   '/store': typeof StoreRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/notifikasi': typeof AuthenticatedNotifikasiRoute
   '/_authenticated/tiket': typeof AuthenticatedTiketRoute
+  '/_authenticated/admin/ai-sync': typeof AuthenticatedAdminAiSyncRouteWithChildren
   '/api/public/xendit-webhook': typeof ApiPublicXenditWebhookRoute
+  '/_authenticated/admin/ai-sync/setup': typeof AuthenticatedAdminAiSyncSetupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -124,9 +153,12 @@ export interface FileRouteTypes {
     | '/komunitas'
     | '/reset-password'
     | '/store'
+    | '/admin'
     | '/notifikasi'
     | '/tiket'
+    | '/admin/ai-sync'
     | '/api/public/xendit-webhook'
+    | '/admin/ai-sync/setup'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -136,9 +168,12 @@ export interface FileRouteTypes {
     | '/komunitas'
     | '/reset-password'
     | '/store'
+    | '/admin'
     | '/notifikasi'
     | '/tiket'
+    | '/admin/ai-sync'
     | '/api/public/xendit-webhook'
+    | '/admin/ai-sync/setup'
   id:
     | '__root__'
     | '/'
@@ -149,9 +184,12 @@ export interface FileRouteTypes {
     | '/komunitas'
     | '/reset-password'
     | '/store'
+    | '/_authenticated/admin'
     | '/_authenticated/notifikasi'
     | '/_authenticated/tiket'
+    | '/_authenticated/admin/ai-sync'
     | '/api/public/xendit-webhook'
+    | '/_authenticated/admin/ai-sync/setup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -224,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/notifikasi': {
       id: '/_authenticated/notifikasi'
       path: '/notifikasi'
@@ -238,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTiketRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/ai-sync': {
+      id: '/_authenticated/admin/ai-sync'
+      path: '/ai-sync'
+      fullPath: '/admin/ai-sync'
+      preLoaderRoute: typeof AuthenticatedAdminAiSyncRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/api/public/xendit-webhook': {
       id: '/api/public/xendit-webhook'
       path: '/api/public/xendit-webhook'
@@ -245,15 +297,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicXenditWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/ai-sync/setup': {
+      id: '/_authenticated/admin/ai-sync/setup'
+      path: '/setup'
+      fullPath: '/admin/ai-sync/setup'
+      preLoaderRoute: typeof AuthenticatedAdminAiSyncSetupRouteImport
+      parentRoute: typeof AuthenticatedAdminAiSyncRoute
+    }
   }
 }
 
+interface AuthenticatedAdminAiSyncRouteChildren {
+  AuthenticatedAdminAiSyncSetupRoute: typeof AuthenticatedAdminAiSyncSetupRoute
+}
+
+const AuthenticatedAdminAiSyncRouteChildren: AuthenticatedAdminAiSyncRouteChildren =
+  {
+    AuthenticatedAdminAiSyncSetupRoute: AuthenticatedAdminAiSyncSetupRoute,
+  }
+
+const AuthenticatedAdminAiSyncRouteWithChildren =
+  AuthenticatedAdminAiSyncRoute._addFileChildren(
+    AuthenticatedAdminAiSyncRouteChildren,
+  )
+
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAiSyncRoute: typeof AuthenticatedAdminAiSyncRouteWithChildren
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAiSyncRoute: AuthenticatedAdminAiSyncRouteWithChildren,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedNotifikasiRoute: typeof AuthenticatedNotifikasiRoute
   AuthenticatedTiketRoute: typeof AuthenticatedTiketRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedNotifikasiRoute: AuthenticatedNotifikasiRoute,
   AuthenticatedTiketRoute: AuthenticatedTiketRoute,
 }
