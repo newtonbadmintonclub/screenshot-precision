@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/newton-client";
 
 export const Route = createFileRoute("/_authenticated/admin/ai-sync/setup")({ component: AiSyncSetupPage, head:()=>({meta:[{title:"AI Sync Setup — Newton BC"},{name:"robots",content:"noindex"}]}) });
 type Agent={id:string;name:string;model:string;system_prompt:string;welcome_message:string;is_active:boolean;temperature:number;max_output_tokens:number};

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { logoUrl } from "@/components/site/Logo";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/newton-client";
 import { useAuth } from "@/hooks/use-auth";
 import { BRAND, LEVELS, type Level } from "@/lib/brand";
 import { safeRedirect } from "@/lib/safe-redirect";

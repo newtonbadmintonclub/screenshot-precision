@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, BellRing, CalendarClock, CheckCheck, CreditCard, Info, ListOrdered, MessageSquareReply, ShoppingBag, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/newton-client";
 import { formatDateTime } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 

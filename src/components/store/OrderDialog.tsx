@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/newton-client";
 import { formatRp, waLink } from "@/lib/brand";
 import { productImage } from "@/lib/product-images";
 import type { PublicProduct } from "@/lib/public.functions";

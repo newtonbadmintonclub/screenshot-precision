@@ -1,12 +1,11 @@
-// Server-side connection settings for the club's own Supabase project.
-// The build-time VITE_* values (from .env) win over runtime SUPABASE_* env vars,
-// so the server talks to the same database the browser uses.
+// Connection settings for the club's own Supabase project (publishable values — safe to commit).
+// Pinned here on purpose: the preview server rewrites VITE_SUPABASE_* to the old
+// Lovable Cloud instance, and server code must hit the same database as the browser.
+export const NEWTON_SUPABASE_URL = "https://urijsqkxagpmxxmfhwcv.supabase.co";
+export const NEWTON_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_OfIkpPT2lefJq5wZRsVfKg_7jYDGi9M";
+
 export function newtonDbConfig() {
-  const env = typeof process !== "undefined" ? process.env : {};
-  const url = import.meta.env["VITE_SUPABASE_URL"] || env["SUPABASE_URL"];
-  const publishableKey = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] || env["SUPABASE_PUBLISHABLE_KEY"];
-  if (!url || !publishableKey) throw new Error("Missing Supabase URL or publishable key");
-  return { url: url.replace(/\/+$/, ""), publishableKey };
+  return { url: NEWTON_SUPABASE_URL, publishableKey: NEWTON_SUPABASE_PUBLISHABLE_KEY };
 }
 
 /** Fetch wrapper: new sb_* keys are opaque, not bearer JWTs. */

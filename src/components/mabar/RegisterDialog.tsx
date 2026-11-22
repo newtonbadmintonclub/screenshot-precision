@@ -15,7 +15,7 @@ import { CopyButton } from "./CopyButton";
 import { QrisPanel } from "./QrisPanel";
 import { QuotaBar } from "./QuotaBar";
 import { useAuth, useProfile } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/newton-client";
 import { BRAND, LEVELS, TRANSFER_ACCOUNT, formatEventDate, formatRp, waLink, waRegistrationText, type Level } from "@/lib/brand";
 import type { PublicEvent } from "@/lib/public.functions";
 import { quotaState } from "@/lib/booking-status";

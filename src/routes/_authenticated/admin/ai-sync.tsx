@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Bot, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/newton-client";
 import { AiSyncPanel } from "@/components/admin/AiSyncPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/ai-sync")({

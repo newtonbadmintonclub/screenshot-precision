@@ -4,7 +4,7 @@ import { CalendarDays, CalendarRange, CheckCircle2, ChevronLeft, ChevronRight, C
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/newton-client";
 
 type EventRow = { id:string; title:string; event_type:string; starts_at:string; time_slots:string|null; courts:string[]|null; venue:string|null; address:string|null; maps_url:string|null; price:number; quota_max:number; base_filled:number; is_featured:boolean };
 type BookingRow = { id:string; event_id:string; player_name:string; whatsapp:string; level:string; status:string; code:string; created_at:string };

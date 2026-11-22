@@ -4,7 +4,7 @@ import { Activity, Bot, CheckCircle2, ChevronDown, ChevronUp, CircleAlert, Insta
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/newton-client";
 
 const db = supabase as any;
 type Settings = { id:string; jalur_1_active:boolean; jalur_2_active:boolean; jalur_3_active:boolean; anti_loop_active:boolean; send_delay_seconds:number; bot_wa_number:string; trigger_keyword:string; waha_api_url:string; wa_group_id:string; instagram_page_id:string };

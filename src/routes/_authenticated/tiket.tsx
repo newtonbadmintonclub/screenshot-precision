@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QrisPanel } from "@/components/mabar/QrisPanel";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/newton-client";
 import { useProfile } from "@/hooks/use-auth";
 import { STATUS_META, canRequestChange, type BookingStatus } from "@/lib/booking-status";
 import { formatDateTime, formatEventDate, formatRp, waLink } from "@/lib/brand";

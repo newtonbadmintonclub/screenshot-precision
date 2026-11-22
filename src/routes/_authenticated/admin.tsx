@@ -29,7 +29,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Logo } from "@/components/site/Logo";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDateTime, formatRp } from "@/lib/brand";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/newton-client";
 import { MembershipPanel } from "@/components/admin/MembershipPanel";
 import { SchedulePanel } from "@/components/admin/SchedulePanel";
 
