@@ -60,6 +60,51 @@ export type Database = {
           },
         ]
       }
+      booking_admin_actions: {
+        Row: {
+          action: string
+          actor_id: string
+          booking_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          request_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          booking_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          request_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          booking_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          request_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_admin_actions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_admin_actions_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           amount: number
