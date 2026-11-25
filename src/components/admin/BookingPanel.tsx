@@ -38,6 +38,8 @@ type BookingRow = {
   updated_at: string;
   payment_expires_at: string | null;
   paid_at: string | null;
+  payment_proof_path: string | null;
+  payment_proof_uploaded_at: string | null;
   events: { title: string; starts_at: string; venue: string; time_slots: string } | null;
   booking_requests: {
     id: string;
@@ -105,7 +107,7 @@ export function BookingPanel() {
     queryFn: async () => {
       let query = supabase
         .from("bookings")
-        .select("id,code,event_id,user_id,player_name,whatsapp,level,channel,payment_method,status,waitlist_position,amount,created_at,updated_at,payment_expires_at,paid_at,events(title,starts_at,venue,time_slots),booking_requests(id,request_type,reason,replacement_name,replacement_whatsapp,status,created_at)", { count: "exact" });
+        .select("id,code,event_id,user_id,player_name,whatsapp,level,channel,payment_method,status,waitlist_position,amount,created_at,updated_at,payment_expires_at,paid_at,payment_proof_path,payment_proof_uploaded_at,events(title,starts_at,venue,time_slots),booking_requests(id,request_type,reason,replacement_name,replacement_whatsapp,status,created_at)", { count: "exact" });
       if (status !== "all") query = query.eq("status", status);
       if (eventId !== "all") query = query.eq("event_id", eventId);
       if (search.trim()) {
@@ -154,6 +156,16 @@ export function BookingPanel() {
         queryClient.invalidateQueries({ queryKey: ["admin-overview"] }),
       ]);
       setSelected(null);
+    },
+  });
+
+  const proofPreview = useQuery({
+    queryKey: ["admin-booking-proof", selected?.id, selected?.payment_proof_path],
+    enabled: !!selected?.payment_proof_path,
+    queryFn: async () => {
+      const { data, error } = await supabase.storage.from("booking-payment-proofs").createSignedUrl(selected!.payment_proof_path!, 300);
+      if (error) throw error;
+      return data.signedUrl;
     },
   });
 
@@ -349,9 +361,14 @@ export function BookingPanel() {
             {selected.status === "pending_verification" && selected.payment_method === "transfer" && (
               <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
                 <p className="text-sm font-bold text-amber-900">Verifikasi transfer manual</p>
-                <p className="mt-1 text-xs leading-relaxed text-amber-800">Bukti transfer saat ini dikirim ke Admin melalui WhatsApp. Periksa bukti dan kecocokan nominal di kanal tersebut sebelum menyetujui pembayaran.</p>
+                <p className="mt-1 text-xs leading-relaxed text-amber-800">Periksa file bukti pembayaran dan pastikan nama pengirim, rekening tujuan, nominal, serta waktu transfer sesuai sebelum menyetujui.</p>
+                {selected.payment_proof_path ? (
+                  proofPreview.isLoading ? <p className="mt-3 text-xs text-slate-500">Menyiapkan akses aman ke bukti…</p> :
+                  proofPreview.data ? <a href={proofPreview.data} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm font-semibold text-[#142b4d] hover:bg-amber-100"><Eye className="h-4 w-4" /> Lihat Bukti Transfer</a> :
+                  <p className="mt-3 text-xs text-red-700">Bukti tidak dapat dibuka: {proofPreview.error?.message ?? "Coba muat ulang."}</p>
+                ) : <p className="mt-3 rounded-lg bg-white p-3 text-xs text-amber-800">Pemain belum mengunggah bukti transfer. Verifikasi belum dapat disetujui.</p>}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button size="sm" disabled={reviewMutation.isPending} onClick={() => runReview("approve_transfer")} className="bg-emerald-600 text-white hover:bg-emerald-700">Verifikasi & Aktifkan Tiket</Button>
+                  <Button size="sm" disabled={reviewMutation.isPending || !selected.payment_proof_path || proofPreview.isError} onClick={() => runReview("approve_transfer")} className="bg-emerald-600 text-white hover:bg-emerald-700">Verifikasi & Aktifkan Tiket</Button>
                   <Button size="sm" variant="outline" disabled={reviewMutation.isPending} onClick={() => runReview("reject_transfer")} className="border-red-200 text-red-700 hover:bg-red-50">Tolak Pembayaran</Button>
                 </div>
               </div>
