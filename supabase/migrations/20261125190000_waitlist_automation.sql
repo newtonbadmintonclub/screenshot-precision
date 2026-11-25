@@ -108,6 +108,8 @@ begin
 end;
 $function$;
 
+revoke all on function public.handle_booking_slot_release() from public, anon, authenticated;
+
 drop trigger if exists bookings_promote_waitlist_after_slot_release on public.bookings;
 create trigger bookings_promote_waitlist_after_slot_release
 after update of status on public.bookings
@@ -140,7 +142,7 @@ end;
 $function$;
 
 revoke all on function public.process_waitlist_expirations() from public, anon;
-grant execute on function public.process_waitlist_expirations() to authenticated;
+revoke all on function public.process_waitlist_expirations() from public, anon, authenticated;
 
 create or replace function public.accept_waitlist_offer(_booking_id uuid, _payment_method text)
 returns jsonb
