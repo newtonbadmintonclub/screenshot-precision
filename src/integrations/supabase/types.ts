@@ -125,6 +125,8 @@ export type Database = {
           updated_at: string
           user_id: string
           waitlist_position: number | null
+          waitlist_offered_at: string | null
+          waitlist_offer_expires_at: string | null
           whatsapp: string
           xendit_qr_id: string | null
         }
@@ -147,6 +149,8 @@ export type Database = {
           updated_at?: string
           user_id: string
           waitlist_position?: number | null
+          waitlist_offered_at?: string | null
+          waitlist_offer_expires_at?: string | null
           whatsapp: string
           xendit_qr_id?: string | null
         }
