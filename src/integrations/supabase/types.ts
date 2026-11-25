@@ -513,6 +513,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      submit_booking_transfer_proof: {
+        Args: { _booking_id: string; _proof_path: string }
+        Returns: Json
+      }
       request_booking_change: {
         Args: {
           _booking_id: string
