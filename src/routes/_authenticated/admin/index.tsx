@@ -33,6 +33,7 @@ import { supabase } from "@/lib/newton-client";
 import { MembershipPanel } from "@/components/admin/MembershipPanel";
 import { SchedulePanel } from "@/components/admin/SchedulePanel";
 import { BookingPanel } from "@/components/admin/BookingPanel";
+import { RefundPanel } from "@/components/admin/RefundPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -239,6 +240,8 @@ function AdminDashboardPage() {
             <SchedulePanel />
           ) : activeSection === "bookings" ? (
             <BookingPanel />
+          ) : activeSection === "finance" ? (
+            <RefundPanel />
           ) : activeSection === "overview" ? (
             <OverviewPanel
               cards={cards}
