@@ -24,6 +24,8 @@ export type PublicEvent = {
   price: number;
   quota_max: number;
   is_featured: boolean;
+  image_url: string | null;
+  image_path: string | null;
   filled: number;
   waitlist: number;
 };
