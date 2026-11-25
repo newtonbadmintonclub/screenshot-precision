@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           id: string
           reason: string | null
+          previous_booking_status: string | null
           replacement_name: string | null
           replacement_whatsapp: string | null
           request_type: string
@@ -31,6 +32,7 @@ export type Database = {
           created_at?: string
           id?: string
           reason?: string | null
+          previous_booking_status?: string | null
           replacement_name?: string | null
           replacement_whatsapp?: string | null
           request_type: string
@@ -355,6 +357,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_review_booking: {
+        Args: { _action: string; _booking_id: string; _reason?: string | null; _request_id?: string | null }
+        Returns: Json
+      }
       book_event: {
         Args: {
           _event_id: string
@@ -475,6 +481,7 @@ export type Database = {
           created_at: string
           id: string
           reason: string | null
+          previous_booking_status: string | null
           replacement_name: string | null
           replacement_whatsapp: string | null
           request_type: string
