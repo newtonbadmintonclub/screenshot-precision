@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import QRCode from "react-qr-code";
 import { toast } from "sonner";
-import { ArrowLeftRight, CalendarDays, Clock, Loader2, MapPin, QrCode, Send, ShoppingBag, Ticket, XCircle } from "lucide-react";
+import { ArrowLeftRight, CalendarDays, Clock, FileImage, Loader2, MapPin, QrCode, ShoppingBag, Ticket, Upload, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import { QrisPanel } from "@/components/mabar/QrisPanel";
 import { supabase } from "@/lib/newton-client";
 import { useProfile } from "@/hooks/use-auth";
 import { STATUS_META, canRequestChange, type BookingStatus } from "@/lib/booking-status";
-import { formatDateTime, formatEventDate, formatRp, waLink } from "@/lib/brand";
+import { formatDateTime, formatEventDate, formatRp } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/tiket")({
@@ -38,6 +38,8 @@ type MyBooking = {
   status: BookingStatus;
   payment_method: string | null;
   payment_expires_at: string | null;
+  payment_proof_path: string | null;
+  payment_proof_uploaded_at: string | null;
   waitlist_position: number | null;
   amount: number;
   player_name: string;
@@ -52,7 +54,7 @@ function useMyBookings() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("id,code,status,payment_method,payment_expires_at,waitlist_position,amount,player_name,level,created_at,events(title,starts_at,time_slots,venue,maps_url)")
+        .select("id,code,status,payment_method,payment_expires_at,payment_proof_path,payment_proof_uploaded_at,waitlist_position,amount,player_name,level,created_at,events(title,starts_at,time_slots,venue,maps_url)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as MyBooking[];
@@ -171,6 +173,9 @@ function TicketCard({ booking: b, past = false }: { booking: MyBooking; past?: b
   const meta = STATUS_META[b.status];
   const can = canRequestChange(b.status);
   const [dialog, setDialog] = useState<null | "cancel" | "swap" | "pay">(null);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofBusy, setProofBusy] = useState(false);
+  const queryClient = useQueryClient();
   const expiredHold = b.status === "awaiting_payment" && b.payment_expires_at && new Date(b.payment_expires_at) <= new Date();
 
   return (
@@ -201,10 +206,38 @@ function TicketCard({ booking: b, past = false }: { booking: MyBooking; past?: b
               {b.status === "awaiting_payment" && !expiredHold && (
                 <Button variant="cta" size="sm" onClick={() => setDialog("pay")}><QrCode /> Lanjutkan Bayar QRIS</Button>
               )}
-              {b.status === "pending_verification" && (
-                <Button asChild variant="whatsapp" size="sm">
-                  <a href={waLink(`Halo Admin Newton BC! Saya kirim bukti transfer tiket ${b.code} (${b.events?.title ?? "mabar"}) sebesar ${formatRp(b.amount)}.`)} target="_blank" rel="noreferrer"><Send /> Kirim Bukti TF</a>
-                </Button>
+              {b.status === "pending_verification" && b.payment_method === "transfer" && (
+                <div className="w-full max-w-md rounded-xl border border-amber-200 bg-amber-50 p-3">
+                  <div className="flex items-center gap-2 text-sm font-bold text-amber-900"><FileImage className="h-4 w-4" /> Bukti pembayaran transfer</div>
+                  {b.payment_proof_path ? <p className="mt-1 text-xs text-emerald-700">Bukti berhasil diunggah{b.payment_proof_uploaded_at ? " • " + formatDateTime(b.payment_proof_uploaded_at) : ""}. Admin akan memeriksa pembayaran.</p> : <p className="mt-1 text-xs text-amber-800">Unggah bukti transfer agar Admin dapat memverifikasi pembayaran dan mengaktifkan tiket.</p>}
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Input type="file" accept="image/jpeg,image/png,application/pdf" className="h-9 max-w-[250px] bg-white text-xs file:mr-2 file:rounded-md file:border-0 file:bg-slate-100 file:px-2 file:py-1" onChange={(event) => setProofFile(event.target.files?.[0] ?? null)} />
+                    <Button size="sm" disabled={!proofFile || proofBusy} onClick={async () => {
+                      if (!proofFile) return;
+                      if (!["image/jpeg", "image/png", "application/pdf"].includes(proofFile.type)) { toast.error("Format file harus JPG, PNG, atau PDF."); return; }
+                      if (proofFile.size > 5 * 1024 * 1024) { toast.error("Ukuran file maksimal 5 MB."); return; }
+                      setProofBusy(true);
+                      try {
+                        const auth = await supabase.auth.getUser();
+                        if (auth.error || !auth.data.user) throw auth.error ?? new Error("Sesi login tidak ditemukan.");
+                        const extension = proofFile.type === "image/jpeg" ? "jpg" : proofFile.type === "image/png" ? "png" : "pdf";
+                        const path = auth.data.user.id + "/" + b.id + "/" + crypto.randomUUID() + "." + extension;
+                        const { error: uploadError } = await supabase.storage.from("booking-payment-proofs").upload(path, proofFile, { contentType: proofFile.type, upsert: false });
+                        if (uploadError) throw uploadError;
+                        const { error: submitError } = await supabase.rpc("submit_booking_transfer_proof", { _booking_id: b.id, _proof_path: path });
+                        if (submitError) throw submitError;
+                        toast.success("Bukti transfer berhasil diunggah.");
+                        setProofFile(null);
+                        await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : "Gagal mengunggah bukti transfer.");
+                      } finally { setProofBusy(false); }
+                    }}>
+                      {proofBusy ? <Loader2 className="animate-spin" /> : <Upload className="h-4 w-4" />} {b.payment_proof_path ? "Ganti Bukti" : "Upload Bukti"}
+                    </Button>
+                  </div>
+                  <p className="mt-2 text-[11px] text-amber-800">Format JPG, PNG, PDF • Maksimal 5 MB. File bersifat privat.</p>
+                </div>
               )}
               {can.swap && (
                 <Button variant="outline" size="sm" onClick={() => setDialog("swap")}><ArrowLeftRight /> Oper Slot / Ganti Player</Button>
