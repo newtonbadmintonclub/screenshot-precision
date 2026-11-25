@@ -84,6 +84,7 @@ function Index() {
           {featured && (
             <div className="animate-rise rounded-2xl border border-on-dark/15 bg-navy-deep/70 p-5 shadow-lift backdrop-blur-md" style={{ animationDelay: "120ms" }}>
               <p className="eyebrow text-orange">Sesi Terdekat</p>
+              {featured.image_url && <img src={featured.image_url} alt={"Poster "+featured.title} loading="lazy" className="mb-4 aspect-[16/9] w-full rounded-xl object-cover" />}
               <p className="mt-1 font-display text-xl font-extrabold leading-tight">{featured.title}</p>
               <p className="mt-1 text-sm text-on-dark-muted">{formatEventDate(featured.starts_at)}</p>
               <p className="mt-0.5 text-sm text-on-dark-muted">{featured.time_slots}</p>

@@ -10,6 +10,7 @@ export function EventCard({ event, onRegister }: { event: PublicEvent; onRegiste
   const q = quotaState(event.filled, event.quota_max);
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-shadow hover:shadow-lift">
+      {event.image_url&&<img src={event.image_url} alt={"Poster "+event.title} loading="lazy" className="aspect-[16/9] w-full bg-muted object-cover" />}
       <div className="flex gap-4 p-5">
         <div className="grid h-[72px] w-16 shrink-0 place-items-center rounded-xl bg-navy text-center text-on-dark">
           <div>

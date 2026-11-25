@@ -24,6 +24,8 @@ export type PublicEvent = {
   price: number;
   quota_max: number;
   is_featured: boolean;
+  image_url: string | null;
+  image_path: string | null;
   filled: number;
   waitlist: number;
 };
@@ -34,7 +36,7 @@ export const listEvents = createServerFn({ method: "GET" }).handler(async (): Pr
   const [{ data: events, error }, { data: quota, error: qErr }] = await Promise.all([
     sb
       .from("events")
-      .select("id,title,event_type,starts_at,time_slots,courts,venue,address,maps_url,price,quota_max,is_featured")
+      .select("id,title,event_type,starts_at,time_slots,courts,venue,address,maps_url,price,quota_max,is_featured,image_url,image_path")
       .gte("starts_at", since)
       .order("starts_at", { ascending: true }),
     sb.rpc("event_quota"),
