@@ -105,6 +105,44 @@ export type Database = {
           },
         ]
       }
+      refund_requests: {
+        Row: {
+          id: string; booking_id: string; request_id: string | null; user_id: string;
+          amount: number; payment_method: string; status: string; reason: string | null;
+          admin_note: string | null; external_reference: string | null;
+          reviewed_by: string | null; processed_by: string | null; completed_by: string | null;
+          requested_at: string; reviewed_at: string | null; processed_at: string | null;
+          completed_at: string | null; updated_at: string;
+        }
+        Insert: {
+          id?: string; booking_id: string; request_id?: string | null; user_id: string;
+          amount: number; payment_method: string; status?: string; reason?: string | null;
+          admin_note?: string | null; external_reference?: string | null;
+          reviewed_by?: string | null; processed_by?: string | null; completed_by?: string | null;
+          requested_at?: string; reviewed_at?: string | null; processed_at?: string | null;
+          completed_at?: string | null; updated_at?: string;
+        }
+        Update: {
+          id?: string; booking_id?: string; request_id?: string | null; user_id?: string;
+          amount?: number; payment_method?: string; status?: string; reason?: string | null;
+          admin_note?: string | null; external_reference?: string | null;
+          reviewed_by?: string | null; processed_by?: string | null; completed_by?: string | null;
+          requested_at?: string; reviewed_at?: string | null; processed_at?: string | null;
+          completed_at?: string | null; updated_at?: string;
+        }
+        Relationships: [
+          { foreignKeyName: "refund_requests_booking_id_fkey"; columns: ["booking_id"]; isOneToOne: true; referencedRelation: "bookings"; referencedColumns: ["id"] },
+          { foreignKeyName: "refund_requests_request_id_fkey"; columns: ["request_id"]; isOneToOne: false; referencedRelation: "booking_requests"; referencedColumns: ["id"] },
+        ]
+      }
+      refund_admin_actions: {
+        Row: { id: string; refund_id: string; actor_id: string; action: string; reason: string | null; external_reference: string | null; created_at: string }
+        Insert: { id?: string; refund_id: string; actor_id: string; action: string; reason?: string | null; external_reference?: string | null; created_at?: string }
+        Update: { id?: string; refund_id?: string; actor_id?: string; action?: string; reason?: string | null; external_reference?: string | null; created_at?: string }
+        Relationships: [
+          { foreignKeyName: "refund_admin_actions_refund_id_fkey"; columns: ["refund_id"]; isOneToOne: false; referencedRelation: "refund_requests"; referencedColumns: ["id"] },
+        ]
+      }
       bookings: {
         Row: {
           amount: number
@@ -414,6 +452,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_refund_status: {
+        Args: { _refund_id: string; _status: string; _reason?: string | null; _external_reference?: string | null }
+        Returns: Json
+      }
       admin_review_booking: {
         Args: { _action: string; _booking_id: string; _reason?: string | null; _request_id?: string | null }
         Returns: Json
