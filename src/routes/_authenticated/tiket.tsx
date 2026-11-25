@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import QRCode from "react-qr-code";
 import { toast } from "sonner";
-import { ArrowLeftRight, CalendarDays, Clock, FileImage, Loader2, MapPin, QrCode, ShoppingBag, Ticket, Upload, XCircle } from "lucide-react";
+import { ArrowLeftRight, CalendarDays, Clock, FileImage, Landmark, Loader2, MapPin, QrCode, ShoppingBag, Ticket, Upload, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,8 @@ type MyBooking = {
   payment_proof_path: string | null;
   payment_proof_uploaded_at: string | null;
   waitlist_position: number | null;
+  waitlist_offered_at: string | null;
+  waitlist_offer_expires_at: string | null;
   amount: number;
   player_name: string;
   level: string;
@@ -54,7 +56,7 @@ function useMyBookings() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("id,code,status,payment_method,payment_expires_at,payment_proof_path,payment_proof_uploaded_at,waitlist_position,amount,player_name,level,created_at,events(title,starts_at,time_slots,venue,maps_url)")
+        .select("id,code,status,payment_method,payment_expires_at,payment_proof_path,payment_proof_uploaded_at,waitlist_position,waitlist_offered_at,waitlist_offer_expires_at,amount,player_name,level,created_at,events(title,starts_at,time_slots,venue,maps_url)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as MyBooking[];
@@ -175,6 +177,7 @@ function TicketCard({ booking: b, past = false }: { booking: MyBooking; past?: b
   const [dialog, setDialog] = useState<null | "cancel" | "swap" | "pay">(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofBusy, setProofBusy] = useState(false);
+  const [waitlistBusy, setWaitlistBusy] = useState(false);
   const queryClient = useQueryClient();
   const expiredHold = b.status === "awaiting_payment" && b.payment_expires_at && new Date(b.payment_expires_at) <= new Date();
 
@@ -203,6 +206,35 @@ function TicketCard({ booking: b, past = false }: { booking: MyBooking; past?: b
           </p>
           {!past && (
             <div className="flex flex-wrap gap-2 pt-1">
+              {b.status === "waiting_list" && b.waitlist_offer_expires_at && new Date(b.waitlist_offer_expires_at) > new Date() && (
+                <div className="w-full rounded-xl border border-teal-200 bg-teal-50 p-3">
+                  <p className="font-bold text-teal-900">🎉 Slot mabar tersedia untukmu!</p>
+                  <p className="mt-1 text-xs text-teal-800">Ambil slot sebelum {formatDateTime(b.waitlist_offer_expires_at)}. Jika lewat, tawaran diteruskan ke pemain berikutnya.</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button size="sm" disabled={waitlistBusy} onClick={async () => {
+                      setWaitlistBusy(true);
+                      try {
+                        const { error } = await supabase.rpc("accept_waitlist_offer", { _booking_id: b.id, _payment_method: "qris" });
+                        if (error) throw error;
+                        toast.success("Slot berhasil diamankan. Lanjutkan pembayaran QRIS.");
+                        await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+                        setDialog("pay");
+                      } catch (error) { toast.error(error instanceof Error ? error.message : "Tawaran slot gagal diambil."); }
+                      finally { setWaitlistBusy(false); }
+                    }}><QrCode className="h-4 w-4" /> Ambil & Bayar QRIS</Button>
+                    <Button size="sm" variant="outline" disabled={waitlistBusy} onClick={async () => {
+                      setWaitlistBusy(true);
+                      try {
+                        const { error } = await supabase.rpc("accept_waitlist_offer", { _booking_id: b.id, _payment_method: "transfer" });
+                        if (error) throw error;
+                        toast.success("Slot berhasil diamankan. Silakan unggah bukti transfer di tiket ini.");
+                        await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+                      } catch (error) { toast.error(error instanceof Error ? error.message : "Tawaran slot gagal diambil."); }
+                      finally { setWaitlistBusy(false); }
+                    }}><Landmark className="h-4 w-4" /> Ambil & Transfer</Button>
+                  </div>
+                </div>
+              )}
               {b.status === "awaiting_payment" && !expiredHold && (
                 <Button variant="cta" size="sm" onClick={() => setDialog("pay")}><QrCode /> Lanjutkan Bayar QRIS</Button>
               )}
