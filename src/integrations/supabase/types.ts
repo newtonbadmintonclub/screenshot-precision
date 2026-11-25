@@ -229,6 +229,8 @@ export type Database = {
       events: {
         Row: {
           address: string
+          image_url: string | null
+          image_path: string | null
           base_filled: number
           courts: string[]
           created_at: string
@@ -245,6 +247,8 @@ export type Database = {
         }
         Insert: {
           address?: string
+          image_url?: string | null
+          image_path?: string | null
           base_filled?: number
           courts?: string[]
           created_at?: string
@@ -261,6 +265,8 @@ export type Database = {
         }
         Update: {
           address?: string
+          image_url?: string | null
+          image_path?: string | null
           base_filled?: number
           courts?: string[]
           created_at?: string
