@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarDays, CheckCircle2, Clock3, Download, Eye, ListChecks, Search, Ticket, X,
 } from "lucide-react";
@@ -47,6 +47,7 @@ type BookingRow = {
     replacement_whatsapp: string | null;
     status: string;
     created_at: string;
+    previous_booking_status?: string | null;
   }[];
 };
 
@@ -133,6 +134,59 @@ export function BookingPanel() {
     staleTime: 15_000,
     refetchInterval: 60_000,
   });
+
+  const queryClient = useQueryClient();
+  const reviewMutation = useMutation({
+    mutationFn: async (input: { bookingId: string; action: string; requestId?: string; reason?: string }) => {
+      const { data, error } = await supabase.rpc("admin_review_booking", {
+        _booking_id: input.bookingId,
+        _action: input.action,
+        _request_id: input.requestId ?? null,
+        _reason: input.reason ?? null,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin-bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-booking-summary"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-overview"] }),
+      ]);
+      setSelected(null);
+    },
+  });
+
+  const actionHistory = useQuery({
+    queryKey: ["admin-booking-actions", selected?.id],
+    enabled: !!selected?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("booking_admin_actions")
+        .select("id,action,reason,created_at")
+        .eq("booking_id", selected!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  function runReview(action: string, requestId?: string) {
+    const messages: Record<string, string> = {
+      approve_transfer: "Konfirmasi bahwa bukti transfer sudah diperiksa dan nominal sesuai. Booking akan diaktifkan.",
+      reject_transfer: "Tolak verifikasi transfer ini? Booking akan dibatalkan.",
+      approve_cancel: "Setujui pembatalan booking ini? Ini tidak memproses refund dana secara otomatis.",
+      reject_cancel: "Tolak pembatalan dan kembalikan tiket ke status sebelumnya?",
+      approve_swap: "Setujui oper slot dan ganti nama serta WhatsApp peserta pada tiket?",
+      reject_swap: "Tolak oper slot dan kembalikan tiket ke status sebelumnya?",
+    };
+    if (!window.confirm(messages[action] ?? "Lanjutkan tindakan ini?")) return;
+    const reason = action.startsWith("reject_")
+      ? window.prompt("Catatan penolakan (wajib):")?.trim()
+      : window.prompt("Catatan Admin (opsional):")?.trim() ?? "";
+    if (action.startsWith("reject_") && !reason) return;
+    reviewMutation.mutate({ bookingId: selected!.id, action, requestId, reason });
+  }
 
   const pageCount = Math.max(1, Math.ceil((bookings.data?.count ?? 0) / PAGE_SIZE));
   const visibleRows = bookings.data?.rows ?? [];
@@ -292,6 +346,17 @@ export function BookingPanel() {
               <Detail label="Posisi waiting list" value={selected.waitlist_position?.toString() ?? "—"} />
               <Detail label="Update terakhir" value={dateTime(selected.updated_at)} />
             </div>
+            {selected.status === "pending_verification" && selected.payment_method === "transfer" && (
+              <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-bold text-amber-900">Verifikasi transfer manual</p>
+                <p className="mt-1 text-xs leading-relaxed text-amber-800">Bukti transfer saat ini dikirim ke Admin melalui WhatsApp. Periksa bukti dan kecocokan nominal di kanal tersebut sebelum menyetujui pembayaran.</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button size="sm" disabled={reviewMutation.isPending} onClick={() => runReview("approve_transfer")} className="bg-emerald-600 text-white hover:bg-emerald-700">Verifikasi & Aktifkan Tiket</Button>
+                  <Button size="sm" variant="outline" disabled={reviewMutation.isPending} onClick={() => runReview("reject_transfer")} className="border-red-200 text-red-700 hover:bg-red-50">Tolak Pembayaran</Button>
+                </div>
+              </div>
+            )}
+            {reviewMutation.isError && <p role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{reviewMutation.error.message}</p>}
             <div className="mt-5 rounded-xl border border-slate-100 p-4">
               <h3 className="text-sm font-bold text-[#142b4d]">Permintaan perubahan booking</h3>
               {selected.booking_requests?.length ? selected.booking_requests.map((request) => (
@@ -299,8 +364,33 @@ export function BookingPanel() {
                   <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold text-slate-700">{request.request_type === "cancel" ? "Pembatalan" : "Oper slot"} • {dateTime(request.created_at)}</p><Badge variant="outline">{request.status}</Badge></div>
                   <p className="mt-1 text-sm text-slate-600">{request.reason || "Tidak ada alasan yang dicantumkan."}</p>
                   {request.replacement_name && <p className="mt-1 text-xs text-slate-500">Pengganti: {request.replacement_name} • {request.replacement_whatsapp}</p>}
+                  {request.status === "pending" && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {request.request_type === "cancel" ? (
+                        <>
+                          <Button size="sm" disabled={reviewMutation.isPending} onClick={() => runReview("approve_cancel", request.id)} className="bg-emerald-600 text-white hover:bg-emerald-700">Setujui Cancel</Button>
+                          <Button size="sm" variant="outline" disabled={reviewMutation.isPending} onClick={() => runReview("reject_cancel", request.id)}>Tolak</Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button size="sm" disabled={reviewMutation.isPending} onClick={() => runReview("approve_swap", request.id)} className="bg-emerald-600 text-white hover:bg-emerald-700">Setujui Oper Slot</Button>
+                          <Button size="sm" variant="outline" disabled={reviewMutation.isPending} onClick={() => runReview("reject_swap", request.id)}>Tolak</Button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               )) : <p className="mt-2 text-sm text-slate-500">Belum ada permintaan perubahan.</p>}
+            </div>
+            <div className="mt-5 rounded-xl border border-slate-100 p-4">
+              <h3 className="text-sm font-bold text-[#142b4d]">Riwayat tindakan Admin</h3>
+              {actionHistory.isLoading ? <p className="mt-2 text-sm text-slate-500">Memuat riwayat…</p> : actionHistory.data?.length ? actionHistory.data.map((item) => (
+                <div key={item.id} className="mt-2 border-t border-slate-100 pt-2 first:mt-1">
+                  <p className="text-sm font-semibold text-slate-700">{item.action.replaceAll("_", " ")}</p>
+                  <p className="text-xs text-slate-500">{dateTime(item.created_at)}{item.reason ? " • " + item.reason : ""}</p>
+                </div>
+              )) : <p className="mt-2 text-sm text-slate-500">Belum ada tindakan Admin untuk booking ini.</p>}
+              {actionHistory.isError && <p className="mt-2 text-xs text-red-600">Riwayat tindakan tidak dapat dimuat.</p>}
             </div>
             <div className="mt-5 flex justify-end"><Button variant="outline" onClick={() => setSelected(null)}>Tutup</Button></div>
           </div>
