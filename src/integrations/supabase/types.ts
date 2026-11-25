@@ -165,12 +165,16 @@ export type Database = {
           paid_at?: string | null
           payment_expires_at?: string | null
           payment_method?: string | null
+          payment_proof_path?: string | null
+          payment_proof_uploaded_at?: string | null
           player_name?: string
           qr_string?: string | null
           status?: string
           updated_at?: string
           user_id?: string
           waitlist_position?: number | null
+          waitlist_offered_at?: string | null
+          waitlist_offer_expires_at?: string | null
           whatsapp?: string
           xendit_qr_id?: string | null
         }
@@ -433,12 +437,16 @@ export type Database = {
           paid_at: string | null
           payment_expires_at: string | null
           payment_method: string | null
+          payment_proof_path: string | null
+          payment_proof_uploaded_at: string | null
           player_name: string
           qr_string: string | null
           status: string
           updated_at: string
           user_id: string
           waitlist_position: number | null
+          waitlist_offered_at: string | null
+          waitlist_offer_expires_at: string | null
           whatsapp: string
           xendit_qr_id: string | null
         }
@@ -462,12 +470,16 @@ export type Database = {
           paid_at: string | null
           payment_expires_at: string | null
           payment_method: string | null
+          payment_proof_path: string | null
+          payment_proof_uploaded_at: string | null
           player_name: string
           qr_string: string | null
           status: string
           updated_at: string
           user_id: string
           waitlist_position: number | null
+          waitlist_offered_at: string | null
+          waitlist_offer_expires_at: string | null
           whatsapp: string
           xendit_qr_id: string | null
         }
