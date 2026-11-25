@@ -32,6 +32,7 @@ import { formatDateTime, formatRp } from "@/lib/brand";
 import { supabase } from "@/lib/newton-client";
 import { MembershipPanel } from "@/components/admin/MembershipPanel";
 import { SchedulePanel } from "@/components/admin/SchedulePanel";
+import { BookingPanel } from "@/components/admin/BookingPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -236,6 +237,8 @@ function AdminDashboardPage() {
             <MembershipPanel />
           ) : activeSection === "events" ? (
             <SchedulePanel />
+          ) : activeSection === "bookings" ? (
+            <BookingPanel />
           ) : activeSection === "overview" ? (
             <OverviewPanel
               cards={cards}
