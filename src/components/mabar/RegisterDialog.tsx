@@ -282,7 +282,7 @@ function WebRegistration({ event, isFull, onDone }: { event: PublicEvent; isFull
         <div className="rounded-2xl bg-teal-soft p-5 text-center">
           <CheckCircle2 className="mx-auto h-9 w-9 text-teal" />
           <p className="mt-2 font-display text-lg font-extrabold text-navy">Kamu di Waiting List #{booking.waitlist_position}</p>
-          <p className="mt-1 text-sm text-muted-foreground">Kalau ada slot kosong, kami kabari lewat notifikasi & WhatsApp.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Kalau slot tersedia, sistem akan mengirim notifikasi dan memberi waktu 30 menit untuk mengambil slot.</p>
         </div>
         <Button asChild variant="outline" className="w-full"><Link to="/tiket" onClick={onDone}>Lihat Tiket Saya</Link></Button>
       </div>
