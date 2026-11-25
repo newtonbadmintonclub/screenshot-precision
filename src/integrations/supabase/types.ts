@@ -117,6 +117,8 @@ export type Database = {
           paid_at: string | null
           payment_expires_at: string | null
           payment_method: string | null
+          payment_proof_path: string | null
+          payment_proof_uploaded_at: string | null
           player_name: string
           qr_string: string | null
           status: string
@@ -137,6 +139,8 @@ export type Database = {
           paid_at?: string | null
           payment_expires_at?: string | null
           payment_method?: string | null
+          payment_proof_path?: string | null
+          payment_proof_uploaded_at?: string | null
           player_name: string
           qr_string?: string | null
           status: string
