@@ -254,13 +254,12 @@ function WebRegistration({ event, isFull, onDone }: { event: PublicEvent; isFull
       );
     }
     if (booking.status === "pending_verification") {
-      const proofText = `Halo Admin Newton BC! Saya kirim bukti transfer mabar.\n\n• Kode tiket: ${booking.code}\n• Event: ${event.title}\n• Tanggal: ${formatEventDate(event.starts_at)}\n• Nama: ${name}\n• Nominal: ${formatRp(booking.amount)}\n\n(lampirkan foto bukti transfer)`;
       return (
         <div className="space-y-4">
           <div className="rounded-2xl bg-warning-soft p-5">
             <p className="flex items-center gap-2 font-bold text-navy"><Hourglass className="h-5 w-5 text-warning" /> Menunggu Verifikasi</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Slot kamu sudah ditahan dengan kode <span className="font-bold text-navy">{booking.code}</span>. Transfer {formatRp(booking.amount)} lalu kirim bukti ke WA Admin.
+              Slot kamu sudah ditahan dengan kode <span className="font-bold text-navy">{booking.code}</span>. Transfer {formatRp(booking.amount)} lalu unggah bukti melalui halaman Tiket Saya.
             </p>
             {TRANSFER_ACCOUNT ? (
               <div className="mt-3 rounded-xl bg-card p-3 text-sm">
@@ -271,8 +270,8 @@ function WebRegistration({ event, isFull, onDone }: { event: PublicEvent; isFull
               <p className="mt-2 text-sm text-muted-foreground">Nomor rekening akan dikirim Admin via WhatsApp.</p>
             )}
           </div>
-          <Button asChild variant="whatsapp" size="lg" className="w-full">
-            <a href={waLink(proofText)} target="_blank" rel="noreferrer"><Send /> Kirim Bukti ke WA Admin</a>
+          <Button asChild variant="cta" size="lg" className="w-full">
+            <Link to="/tiket" onClick={onDone}>Buka Tiket & Upload Bukti Transfer</Link>
           </Button>
           <Button asChild variant="outline" className="w-full"><Link to="/tiket" onClick={onDone}>Lihat Tiket Saya</Link></Button>
         </div>
