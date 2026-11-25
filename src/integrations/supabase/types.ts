@@ -474,6 +474,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      accept_waitlist_offer: {
+        Args: { _booking_id: string; _payment_method: string }
+        Returns: Json
+      }
       event_quota: {
         Args: never
         Returns: {
