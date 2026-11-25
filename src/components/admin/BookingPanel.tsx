@@ -40,6 +40,8 @@ type BookingRow = {
   paid_at: string | null;
   payment_proof_path: string | null;
   payment_proof_uploaded_at: string | null;
+  waitlist_offered_at: string | null;
+  waitlist_offer_expires_at: string | null;
   events: { title: string; starts_at: string; venue: string; time_slots: string } | null;
   booking_requests: {
     id: string;
@@ -107,7 +109,7 @@ export function BookingPanel() {
     queryFn: async () => {
       let query = supabase
         .from("bookings")
-        .select("id,code,event_id,user_id,player_name,whatsapp,level,channel,payment_method,status,waitlist_position,amount,created_at,updated_at,payment_expires_at,paid_at,payment_proof_path,payment_proof_uploaded_at,events(title,starts_at,venue,time_slots),booking_requests(id,request_type,reason,replacement_name,replacement_whatsapp,status,created_at)", { count: "exact" });
+        .select("id,code,event_id,user_id,player_name,whatsapp,level,channel,payment_method,status,waitlist_position,amount,created_at,updated_at,payment_expires_at,paid_at,payment_proof_path,payment_proof_uploaded_at,waitlist_offered_at,waitlist_offer_expires_at,events(title,starts_at,venue,time_slots),booking_requests(id,request_type,reason,replacement_name,replacement_whatsapp,status,created_at)", { count: "exact" });
       if (status !== "all") query = query.eq("status", status);
       if (eventId !== "all") query = query.eq("event_id", eventId);
       if (search.trim()) {
@@ -310,7 +312,7 @@ export function BookingPanel() {
                           <p className="mt-0.5 text-xs text-slate-500">Via {item.channel}</p>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 font-bold text-[#142b4d]">{money(item.amount)}</td>
-                        <td className="px-4 py-3"><Badge variant="outline" className={statusStyle(item.status)}>{STATUS_LABEL[item.status] ?? item.status}</Badge></td>
+                        <td className="px-4 py-3"><Badge variant="outline" className={statusStyle(item.status)}>{STATUS_LABEL[item.status] ?? item.status}</Badge>{item.status === "waiting_list" && item.waitlist_offer_expires_at && <p className="mt-1 text-[11px] font-semibold text-teal-700">Slot ditawarkan sampai {dateTime(item.waitlist_offer_expires_at)}</p>}</td>
                         <td className="px-4 py-3 text-right"><Button variant="ghost" size="icon" aria-label={`Lihat booking ${item.code}`} onClick={() => setSelected(item)}><Eye className="h-4 w-4" /></Button></td>
                       </tr>
                     ))}
