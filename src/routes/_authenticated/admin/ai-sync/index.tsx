@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/newton-client";
 import { AiSyncPanel } from "@/components/admin/AiSyncPanel";
 
-export const Route = createFileRoute("/_authenticated/admin/ai-sync")({
+export const Route = createFileRoute("/_authenticated/admin/ai-sync/")({
  head:()=>({meta:[{title:"AI Agent & Omnichannel Sync — Newton BC"},{name:"robots",content:"noindex"}]}),
  component:AiSyncPage,
 });
