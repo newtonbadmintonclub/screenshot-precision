@@ -25,7 +25,9 @@ export function SchedulePanel() {
  const [dialog,setDialog]=useState(false);
  const [editing,setEditing]=useState<EventRow|null>(null);
  const [draft,setDraft]=useState<Draft>(makeDraft());
- const [formError,setFormError]=useState("");\n const [posterFile,setPosterFile]=useState<File|null>(null);\n const [posterPreview,setPosterPreview]=useState("");
+ const [formError,setFormError]=useState("");
+ const [posterFile,setPosterFile]=useState<File|null>(null);
+ const [posterPreview,setPosterPreview]=useState("");
  const events=useQuery({queryKey:["admin-schedule-events"],queryFn:async()=>{const {data,error}=await supabase.from("events").select("id,title,event_type,starts_at,time_slots,courts,venue,address,maps_url,price,quota_max,base_filled,is_featured,image_url,image_path").order("starts_at");if(error)throw error;return (data??[]) as EventRow[]}});
  const bookings=useQuery({queryKey:["admin-schedule-bookings"],queryFn:async()=>{const {data,error}=await supabase.from("bookings").select("id,event_id,player_name,whatsapp,level,status,code,created_at").order("created_at",{ascending:false}).limit(3000);if(error)throw error;return (data??[]) as BookingRow[]}});
  const countMap=useMemo(()=>{const map=new Map<string,{confirmed:number;waiting:number;pending:number;total:number}>();for(const b of bookings.data??[]){const c=map.get(b.event_id)??{confirmed:0,waiting:0,pending:0,total:0};c.total++;if(b.status==="confirmed")c.confirmed++;if(b.status==="waiting_list")c.waiting++;if(b.status==="awaiting_payment"||b.status==="pending_verification")c.pending++;map.set(b.event_id,c);}return map;},[bookings.data]);
@@ -50,9 +52,21 @@ export function SchedulePanel() {
   }
  },onSuccess:async()=>{await Promise.all([qc.invalidateQueries({queryKey:["admin-schedule-events"]}),qc.invalidateQueries({queryKey:["events"]})]);setDialog(false);setEditing(null);setPosterFile(null);setPosterPreview("");},onError:(e:Error)=>setFormError(e.message)});
  const deleteEvent=useMutation({mutationFn:async(eventId:string)=>{const {count,error:countError}=await supabase.from("bookings").select("id",{count:"exact",head:true}).eq("event_id",eventId);if(countError)throw countError;if((count??0)>0)throw new Error("Jadwal tidak dapat dihapus karena sudah memiliki booking. Selesaikan pembatalan peserta terlebih dahulu.");const {error}=await supabase.from("events").delete().eq("id",eventId);if(error)throw error;},onSuccess:async(_data,eventId)=>{await Promise.all([qc.invalidateQueries({queryKey:["admin-schedule-events"]}),qc.invalidateQueries({queryKey:["admin-overview"]})]);setSelected(current=>current?.id===eventId?null:current);},onError:(error:Error)=>window.alert(error.message)});
- const requestDelete=(event:EventRow)=>{const bookingCount=countMap.get(event.id);const hasBookings=(bookingCount?.total??0)>0;const warning=hasBookings?"\n\nJadwal ini sudah memiliki peserta/booking dan tidak bisa dihapus.":"\n\nPenghapusan bersifat permanen dan tidak dapat dibatalkan.";if(hasBookings){window.alert("Tidak dapat menghapus jadwal ini karena masih memiliki booking.");return;}if(window.confirm("Hapus jadwal mabar \""+event.title+"\"?"+warning))deleteEvent.mutate(event.id);};
+ const requestDelete=(event:EventRow)=>{const bookingCount=countMap.get(event.id);const hasBookings=(bookingCount?.total??0)>0;const warning=hasBookings?"
+
+Jadwal ini sudah memiliki peserta/booking dan tidak bisa dihapus.":"
+
+Penghapusan bersifat permanen dan tidak dapat dibatalkan.";if(hasBookings){window.alert("Tidak dapat menghapus jadwal ini karena masih memiliki booking.");return;}if(window.confirm("Hapus jadwal mabar \""+event.title+"\"?"+warning))deleteEvent.mutate(event.id);};
  const openForm=(source?:EventRow,duplicate=false)=>{setEditing(source&&!duplicate?source:null);setDraft(source?{image_url:duplicate?"":source.image_url??"",image_path:duplicate?"":source.image_path??"",title:duplicate?source.title+" (Copy)":source.title,event_type:source.event_type,date:new Date(source.starts_at).toLocaleDateString("en-CA"),start_time:timeText(source.starts_at),time_slots:source.time_slots??"",courts:(source.courts??[]).join(", "),venue:source.venue??"",address:source.address??"",maps_url:source.maps_url??"",quota_max:String(source.quota_max),price:String(source.price),is_featured:source.is_featured}:makeDraft());setPosterFile(null);setPosterPreview(source&&!duplicate?source.image_url??"":"");setFormError("");setDialog(true);};
- const copyBlast=(e:EventRow)=>{const c=countMap.get(e.id)??{confirmed:e.base_filled,waiting:0,pending:0};const filled=Math.max(e.base_filled,c.confirmed);const remaining=Math.max(0,e.quota_max-filled);const msg="🏸 "+e.title+"\n📅 "+dateText(e.starts_at)+"\n🕒 "+(e.time_slots??timeText(e.starts_at))+"\n📍 "+(e.venue??"")+"\n💰 HTM "+money(e.price)+"\n🎟 Sisa "+remaining+" dari "+e.quota_max+" slot\n\nDaftar: "+window.location.origin+"/jadwal\nNewton Badminton Club";void navigator.clipboard.writeText(msg);};
+ const copyBlast=(e:EventRow)=>{const c=countMap.get(e.id)??{confirmed:e.base_filled,waiting:0,pending:0};const filled=Math.max(e.base_filled,c.confirmed);const remaining=Math.max(0,e.quota_max-filled);const msg="🏸 "+e.title+"
+📅 "+dateText(e.starts_at)+"
+🕒 "+(e.time_slots??timeText(e.starts_at))+"
+📍 "+(e.venue??"")+"
+💰 HTM "+money(e.price)+"
+🎟 Sisa "+remaining+" dari "+e.quota_max+" slot
+
+Daftar: "+window.location.origin+"/jadwal
+Newton Badminton Club";void navigator.clipboard.writeText(msg);};
  const first=new Date(month.getFullYear(),month.getMonth(),1);const offset=(first.getDay()+6)%7;const days=Array.from({length:42},(_,i)=>new Date(month.getFullYear(),month.getMonth(),i-offset+1));
  const shownCalendar=(events.data??[]).filter(e=>selectedDay?sameDay(e.starts_at,selectedDay):new Date(e.starts_at).getMonth()===month.getMonth()&&new Date(e.starts_at).getFullYear()===month.getFullYear());
  const allBookings=bookings.data??[];
