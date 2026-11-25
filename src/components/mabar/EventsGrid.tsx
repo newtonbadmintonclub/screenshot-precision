@@ -22,7 +22,7 @@ export function EventsGrid({ events }: { events: PublicEvent[] }) {
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4">
         {events.map((e, i) => (
           <div key={e.id} className="animate-rise" style={{ animationDelay: `${i * 60}ms` }}>
             <EventCard
