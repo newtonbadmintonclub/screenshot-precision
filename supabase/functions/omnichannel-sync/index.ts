@@ -12,7 +12,8 @@ Deno.serve(async(req)=>{
  const body=await req.json().catch(()=>({})) as Record<string,any>;
  const source=String(body.source??"webhook");
  const isSimulation=source==="simulation";
- if(isSimulation){
+ const isHealthcheck=source==="healthcheck";
+ if(isSimulation||isHealthcheck){
   const token=auth.replace(/^Bearer\s+/i,"");
   const client=createClient(url,Deno.env.get("SUPABASE_ANON_KEY")??Deno.env.get("SUPABASE_PUBLISHABLE_KEY")??"");
   const {data:{user}}=await client.auth.getUser(token);
@@ -34,6 +35,13 @@ Deno.serve(async(req)=>{
   admin.from("ai_integration_status").update({configured:wahaConfigured,last_checked_at:new Date().toISOString(),last_error:wahaConfigured?null:"WAHA secrets belum lengkap"}).eq("provider","waha"),
   admin.from("ai_integration_status").update({configured:metaConfigured,last_checked_at:new Date().toISOString(),last_error:metaConfigured?null:"Meta secrets belum lengkap"}).eq("provider","meta_instagram")
  ]);
+ if(isHealthcheck){
+  return json({ok:true,providers:{
+   gemini:{configured:geminiConfigured,last_error:geminiConfigured?null:"GEMINI_API_KEY belum diset"},
+   waha:{configured:wahaConfigured,last_error:wahaConfigured?null:"WAHA_BASE_URL atau WAHA_API_KEY belum diset"},
+   meta_instagram:{configured:metaConfigured,last_error:metaConfigured?null:"META_PAGE_ACCESS_TOKEN atau META_VERIFY_TOKEN belum diset"}
+  }});
+ }
  if(!isSimulation&&agent?.is_active!==true)return json({error:"AI Agent belum diaktifkan dari halaman Setup."},409);
  const text=String(body.text??body.message?.text??body.body??body.entry?.[0]?.messaging?.[0]?.message?.text??"");
  const sender=String(body.sender??body.from??body.key?.remoteJid??body.message?.from??"");
