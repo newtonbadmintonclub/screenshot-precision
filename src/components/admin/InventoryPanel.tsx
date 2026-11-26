@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/newton-client";
+import { InventoryProcurementPanel } from "@/components/admin/InventoryProcurementPanel";
 
 type InventoryItem = {
   id: string; sku: string | null; name: string; category: string; description: string;
@@ -37,7 +38,7 @@ export function InventoryPanel() {
   const [draft, setDraft] = useState(emptyDraft);
   const [movementItem, setMovementItem] = useState<InventoryItem | null>(null);
   const [movement, setMovement] = useState({ movement_type: "stock_in", quantity: "1", reason: "", reference: "" });
-  const [tab, setTab] = useState<"items" | "history">("items");
+  const [tab, setTab] = useState<"items" | "history" | "procurement">("items");
 
   const items = useQuery({
     queryKey: ["admin-inventory-items", showInactive],
@@ -110,6 +111,8 @@ export function InventoryPanel() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-inventory-items"] }),
   });
 
+  if (tab === "procurement") return <div className="space-y-4"><Button variant="outline" size="sm" onClick={() => setTab("items")}>Kembali ke Inventaris</Button><InventoryProcurementPanel /></div>;
+
   function openNew() { setEditing(null); setDraft(emptyDraft); setItemDialog(true); }
   function openEdit(item: InventoryItem) {
     setEditing(item);
@@ -132,7 +135,7 @@ export function InventoryPanel() {
       <CardHeader className="gap-4 border-b border-slate-100 pb-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div><CardTitle className="font-display text-lg text-[#142b4d]">Inventaris Klub</CardTitle><p className="mt-1 text-sm text-slate-500">Data barang, jumlah tersedia, kondisi, dan riwayat pergerakan stok.</p></div>
-          <div className="flex gap-2"><Button size="sm" variant={tab === "items" ? "default" : "outline"} onClick={() => setTab("items")}>Daftar Barang</Button><Button size="sm" variant={tab === "history" ? "default" : "outline"} onClick={() => setTab("history")}>Riwayat Stok</Button></div>
+          <div className="flex gap-2"><Button size="sm" variant={tab === "items" ? "default" : "outline"} onClick={() => setTab("items")}>Daftar Barang</Button><Button size="sm" variant={tab === "history" ? "default" : "outline"} onClick={() => setTab("history")}>Riwayat Stok</Button><Button size="sm" variant={tab === "procurement" ? "default" : "outline"} onClick={() => setTab("procurement")}>Supplier & Pembelian</Button></div>
         </div>
         {tab === "items" && <div className="flex flex-wrap gap-2">
           <label className="flex h-10 min-w-[220px] flex-1 items-center gap-2 rounded-lg border border-slate-200 px-3"><Search className="h-4 w-4 text-slate-400" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari nama, SKU, lokasi..." className="w-full bg-transparent text-sm outline-none" /></label>
