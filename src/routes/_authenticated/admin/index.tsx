@@ -36,6 +36,7 @@ import { BookingPanel } from "@/components/admin/BookingPanel";
 import { RefundPanel } from "@/components/admin/RefundPanel";
 import { InventoryPanel } from "@/components/admin/InventoryPanel";
 import { WaitingListPanel } from "@/components/admin/WaitingListPanel";
+import { MatchmakingPanel } from "@/components/admin/MatchmakingPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -244,6 +245,8 @@ function AdminDashboardPage() {
             <BookingPanel />
           ) : activeSection === "waiting-list" ? (
             <WaitingListPanel />
+          ) : activeSection === "matchmaking" ? (
+            <MatchmakingPanel />
           ) : activeSection === "finance" ? (
             <RefundPanel />
           ) : activeSection === "inventory" ? (
