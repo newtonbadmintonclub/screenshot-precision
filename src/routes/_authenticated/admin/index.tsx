@@ -33,7 +33,7 @@ import { supabase } from "@/lib/newton-client";
 import { MembershipPanel } from "@/components/admin/MembershipPanel";
 import { SchedulePanel } from "@/components/admin/SchedulePanel";
 import { BookingPanel } from "@/components/admin/BookingPanel";
-import { RefundPanel } from "@/components/admin/RefundPanel";
+import { FinancePanel } from "@/components/admin/FinancePanel";
 import { InventoryPanel } from "@/components/admin/InventoryPanel";
 import { WaitingListPanel } from "@/components/admin/WaitingListPanel";
 import { MatchmakingPanel } from "@/components/admin/MatchmakingPanel";
@@ -248,7 +248,7 @@ function AdminDashboardPage() {
           ) : activeSection === "matchmaking" ? (
             <MatchmakingPanel />
           ) : activeSection === "finance" ? (
-            <RefundPanel />
+            <FinancePanel />
           ) : activeSection === "inventory" ? (
             <InventoryPanel />
           ) : activeSection === "overview" ? (
