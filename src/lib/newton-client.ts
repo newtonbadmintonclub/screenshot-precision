@@ -2,11 +2,11 @@
 // Replaces the generated "@/lib/newton-client", which the platform
 // points at the old Lovable Cloud instance.
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import type { NewtonDatabase } from "@/lib/newton-schema";
 import { keyFetch, NEWTON_SUPABASE_PUBLISHABLE_KEY, NEWTON_SUPABASE_URL } from "./newton-db";
 
 function create() {
-  return createClient<Database>(NEWTON_SUPABASE_URL, NEWTON_SUPABASE_PUBLISHABLE_KEY, {
+  return createClient<NewtonDatabase>(NEWTON_SUPABASE_URL, NEWTON_SUPABASE_PUBLISHABLE_KEY, {
     global: { fetch: keyFetch(NEWTON_SUPABASE_PUBLISHABLE_KEY) },
     auth: { persistSession: true, autoRefreshToken: true },
   });

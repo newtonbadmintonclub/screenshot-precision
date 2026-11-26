@@ -19,7 +19,13 @@ type Movement = {
 };
 const money = (value: number | null) => value == null ? "—" : new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
 const dateTime = (value: string) => new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-const emptyDraft = { sku: "", name: "", category: "Perlengkapan", description: "", unit: "pcs", minimum_quantity: "0", location: "", condition_status: "baik" as const, unit_cost: "" };
+type ConditionStatus = "baik" | "perlu_perbaikan" | "rusak";
+type Draft = {
+  sku: string; name: string; category: string; description: string; unit: string;
+  quantity: string; minimum_quantity: string; location: string;
+  condition_status: ConditionStatus; unit_cost: string;
+};
+const emptyDraft: Draft = { sku: "", name: "", category: "Perlengkapan", description: "", unit: "pcs", quantity: "0", minimum_quantity: "0", location: "", condition_status: "baik", unit_cost: "" };
 
 export function InventoryPanel() {
   const qc = useQueryClient();

@@ -1,11 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import type { NewtonDatabase } from "@/lib/newton-schema";
 import { keyFetch, newtonDbConfig } from "./newton-db";
 
 function publicClient() {
   const { url, publishableKey } = newtonDbConfig();
-  return createClient<Database>(url, publishableKey, {
+  return createClient<NewtonDatabase>(url, publishableKey, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
     global: { fetch: keyFetch(publishableKey) },
   });
@@ -51,7 +51,7 @@ export const listEvents = createServerFn({ method: "GET" }).handler(async (): Pr
   }));
 });
 
-export type PublicProduct = Database["public"]["Tables"]["products"]["Row"];
+export type PublicProduct = NewtonDatabase["public"]["Tables"]["products"]["Row"];
 
 export const listProducts = createServerFn({ method: "GET" }).handler(async (): Promise<PublicProduct[]> => {
   const sb = publicClient();

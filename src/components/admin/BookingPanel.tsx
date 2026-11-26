@@ -133,7 +133,7 @@ export function BookingPanel() {
       ));
       const failed = results.find((result) => result.error);
       if (failed?.error) throw failed.error;
-      return Object.fromEntries(statuses.map((value, index) => [value, results[index].count ?? 0])) as Record<(typeof statuses)[number], number>;
+      return Object.fromEntries(statuses.map((value, index) => [value, results[index]?.count ?? 0])) as Record<(typeof statuses)[number], number>;
     },
     staleTime: 15_000,
     refetchInterval: 60_000,
@@ -199,7 +199,13 @@ export function BookingPanel() {
       ? window.prompt("Catatan penolakan (wajib):")?.trim()
       : window.prompt("Catatan Admin (opsional):")?.trim() ?? "";
     if (action.startsWith("reject_") && !reason) return;
-    reviewMutation.mutate({ bookingId: selected!.id, action, requestId, reason });
+    const input: { bookingId: string; action: string; requestId?: string; reason?: string } = {
+      bookingId: selected!.id,
+      action,
+    };
+    if (requestId) input.requestId = requestId;
+    if (reason) input.reason = reason;
+    reviewMutation.mutate(input);
   }
 
   const pageCount = Math.max(1, Math.ceil((bookings.data?.count ?? 0) / PAGE_SIZE));
@@ -419,7 +425,7 @@ export function BookingPanel() {
   );
 }
 
-function SummaryCard({ label, value, icon, tint }: { label: string; value?: number; icon: React.ReactNode; tint: string }) {
+function SummaryCard({ label, value, icon, tint }: { label: string; value: number | undefined; icon: React.ReactNode; tint: string }) {
   const styles: Record<string, string> = {
     green: "bg-emerald-50 text-emerald-600", orange: "bg-orange-50 text-orange-600",
     blue: "bg-sky-50 text-sky-600", purple: "bg-purple-50 text-purple-600",
