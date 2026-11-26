@@ -27,8 +27,13 @@ function shuffle<T>(items: T[]) {
   return result;
 }
 function buildMatches(players: Player[], courts: string[], seed: number): { matches: Match[]; waiting: Player[] } {
-  const ranked = [...players].sort((a, b) => (LEVEL_SCORE[b.level] ?? 2) - (LEVEL_SCORE[a.level] ?? 2));
-  const randomized = shuffle(ranked);
+  const byLevel = (level: string) => shuffle(players.filter((player) => player.level === level));
+  const randomized = [
+    ...byLevel("Advance"),
+    ...byLevel("Intermediate"),
+    ...byLevel("Beginner"),
+    ...shuffle(players.filter((player) => !["Advance", "Intermediate", "Beginner"].includes(player.level))),
+  ];
   const matches: Match[] = [];
   const usableCourts = courts.length ? courts : ["Lapangan 1"];
   for (let index = 0; index + 3 < randomized.length; index += 4) {
