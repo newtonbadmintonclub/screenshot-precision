@@ -28,8 +28,7 @@ function depreciation(asset: Asset) {
   const accumulated = Math.min(depreciable, depreciable / asset.useful_life_months * elapsed);
   return { accumulated, bookValue: Math.max(Number(asset.salvage_value), Number(asset.purchase_cost) - accumulated) };
 }
-const csv = (rows: unknown[][]) => "\uFEFF" + rows.map(r => r.map(v => '"' + String(v ?? "").replace(/"/g, '""') + '"').join(";")).join("\r
-");
+const csv = (rows: unknown[][]) => String.fromCharCode(0xFEFF) + rows.map(r => r.map(v => '"' + String(v ?? "").replace(/"/g, '""') + '"').join(";")).join(String.fromCharCode(13, 10));
 function exportAssets(assets: Asset[]) {
   const content = csv([["Kode Aset","Nama","Kategori","Serial Number","Tanggal Perolehan","Harga Perolehan","Nilai Residu","Umur Manfaat (bulan)","Akumulasi Penyusutan","Nilai Buku","Garansi","Lokasi","Kondisi","Status"], ...assets.map(a => { const d=depreciation(a); return [a.asset_code,a.name,a.category,a.serial_number,a.purchase_date,a.purchase_cost,a.salvage_value,a.useful_life_months,Math.round(d.accumulated),Math.round(d.bookValue),a.warranty_expires_at,a.location,a.condition_status,a.status]; })]);
   const url = URL.createObjectURL(new Blob([content], {type:"text/csv;charset=utf-8;"}));
