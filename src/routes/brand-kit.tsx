@@ -4,7 +4,7 @@ import { PageHero } from "@/components/site/PageHero";
 import { CopyButton } from "@/components/mabar/CopyButton";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { logoUrl } from "@/components/site/Logo";
+const logoUrl = "/favicon.png";
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
