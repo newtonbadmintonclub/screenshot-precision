@@ -20,7 +20,6 @@ export type Database = {
           created_at: string
           id: string
           reason: string | null
-          previous_booking_status: string | null
           replacement_name: string | null
           replacement_whatsapp: string | null
           request_type: string
@@ -32,7 +31,6 @@ export type Database = {
           created_at?: string
           id?: string
           reason?: string | null
-          previous_booking_status?: string | null
           replacement_name?: string | null
           replacement_whatsapp?: string | null
           request_type: string
@@ -60,89 +58,6 @@ export type Database = {
           },
         ]
       }
-      booking_admin_actions: {
-        Row: {
-          action: string
-          actor_id: string
-          booking_id: string
-          created_at: string
-          id: string
-          reason: string | null
-          request_id: string | null
-        }
-        Insert: {
-          action: string
-          actor_id: string
-          booking_id: string
-          created_at?: string
-          id?: string
-          reason?: string | null
-          request_id?: string | null
-        }
-        Update: {
-          action?: string
-          actor_id?: string
-          booking_id?: string
-          created_at?: string
-          id?: string
-          reason?: string | null
-          request_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "booking_admin_actions_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "booking_admin_actions_request_id_fkey"
-            columns: ["request_id"]
-            isOneToOne: false
-            referencedRelation: "booking_requests"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      refund_requests: {
-        Row: {
-          id: string; booking_id: string; request_id: string | null; user_id: string;
-          amount: number; payment_method: string; status: string; reason: string | null;
-          admin_note: string | null; external_reference: string | null;
-          reviewed_by: string | null; processed_by: string | null; completed_by: string | null;
-          requested_at: string; reviewed_at: string | null; processed_at: string | null;
-          completed_at: string | null; updated_at: string;
-        }
-        Insert: {
-          id?: string; booking_id: string; request_id?: string | null; user_id: string;
-          amount: number; payment_method: string; status?: string; reason?: string | null;
-          admin_note?: string | null; external_reference?: string | null;
-          reviewed_by?: string | null; processed_by?: string | null; completed_by?: string | null;
-          requested_at?: string; reviewed_at?: string | null; processed_at?: string | null;
-          completed_at?: string | null; updated_at?: string;
-        }
-        Update: {
-          id?: string; booking_id?: string; request_id?: string | null; user_id?: string;
-          amount?: number; payment_method?: string; status?: string; reason?: string | null;
-          admin_note?: string | null; external_reference?: string | null;
-          reviewed_by?: string | null; processed_by?: string | null; completed_by?: string | null;
-          requested_at?: string; reviewed_at?: string | null; processed_at?: string | null;
-          completed_at?: string | null; updated_at?: string;
-        }
-        Relationships: [
-          { foreignKeyName: "refund_requests_booking_id_fkey"; columns: ["booking_id"]; isOneToOne: true; referencedRelation: "bookings"; referencedColumns: ["id"] },
-          { foreignKeyName: "refund_requests_request_id_fkey"; columns: ["request_id"]; isOneToOne: false; referencedRelation: "booking_requests"; referencedColumns: ["id"] },
-        ]
-      }
-      refund_admin_actions: {
-        Row: { id: string; refund_id: string; actor_id: string; action: string; reason: string | null; external_reference: string | null; created_at: string }
-        Insert: { id?: string; refund_id: string; actor_id: string; action: string; reason?: string | null; external_reference?: string | null; created_at?: string }
-        Update: { id?: string; refund_id?: string; actor_id?: string; action?: string; reason?: string | null; external_reference?: string | null; created_at?: string }
-        Relationships: [
-          { foreignKeyName: "refund_admin_actions_refund_id_fkey"; columns: ["refund_id"]; isOneToOne: false; referencedRelation: "refund_requests"; referencedColumns: ["id"] },
-        ]
-      }
       bookings: {
         Row: {
           amount: number
@@ -155,16 +70,12 @@ export type Database = {
           paid_at: string | null
           payment_expires_at: string | null
           payment_method: string | null
-          payment_proof_path: string | null
-          payment_proof_uploaded_at: string | null
           player_name: string
           qr_string: string | null
           status: string
           updated_at: string
           user_id: string
           waitlist_position: number | null
-          waitlist_offered_at: string | null
-          waitlist_offer_expires_at: string | null
           whatsapp: string
           xendit_qr_id: string | null
         }
@@ -179,16 +90,12 @@ export type Database = {
           paid_at?: string | null
           payment_expires_at?: string | null
           payment_method?: string | null
-          payment_proof_path?: string | null
-          payment_proof_uploaded_at?: string | null
           player_name: string
           qr_string?: string | null
           status: string
           updated_at?: string
           user_id: string
           waitlist_position?: number | null
-          waitlist_offered_at?: string | null
-          waitlist_offer_expires_at?: string | null
           whatsapp: string
           xendit_qr_id?: string | null
         }
@@ -203,16 +110,12 @@ export type Database = {
           paid_at?: string | null
           payment_expires_at?: string | null
           payment_method?: string | null
-          payment_proof_path?: string | null
-          payment_proof_uploaded_at?: string | null
           player_name?: string
           qr_string?: string | null
           status?: string
           updated_at?: string
           user_id?: string
           waitlist_position?: number | null
-          waitlist_offered_at?: string | null
-          waitlist_offer_expires_at?: string | null
           whatsapp?: string
           xendit_qr_id?: string | null
         }
@@ -229,8 +132,6 @@ export type Database = {
       events: {
         Row: {
           address: string
-          image_url: string | null
-          image_path: string | null
           base_filled: number
           courts: string[]
           created_at: string
@@ -247,8 +148,6 @@ export type Database = {
         }
         Insert: {
           address?: string
-          image_url?: string | null
-          image_path?: string | null
           base_filled?: number
           courts?: string[]
           created_at?: string
@@ -265,8 +164,6 @@ export type Database = {
         }
         Update: {
           address?: string
-          image_url?: string | null
-          image_path?: string | null
           base_filled?: number
           courts?: string[]
           created_at?: string
@@ -458,14 +355,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_update_refund_status: {
-        Args: { _refund_id: string; _status: string; _reason?: string | null; _external_reference?: string | null }
-        Returns: Json
-      }
-      admin_review_booking: {
-        Args: { _action: string; _booking_id: string; _reason?: string | null; _request_id?: string | null }
-        Returns: Json
-      }
       book_event: {
         Args: {
           _event_id: string
@@ -485,16 +374,12 @@ export type Database = {
           paid_at: string | null
           payment_expires_at: string | null
           payment_method: string | null
-          payment_proof_path: string | null
-          payment_proof_uploaded_at: string | null
           player_name: string
           qr_string: string | null
           status: string
           updated_at: string
           user_id: string
           waitlist_position: number | null
-          waitlist_offered_at: string | null
-          waitlist_offer_expires_at: string | null
           whatsapp: string
           xendit_qr_id: string | null
         }
@@ -518,16 +403,12 @@ export type Database = {
           paid_at: string | null
           payment_expires_at: string | null
           payment_method: string | null
-          payment_proof_path: string | null
-          payment_proof_uploaded_at: string | null
           player_name: string
           qr_string: string | null
           status: string
           updated_at: string
           user_id: string
           waitlist_position: number | null
-          waitlist_offered_at: string | null
-          waitlist_offer_expires_at: string | null
           whatsapp: string
           xendit_qr_id: string | null
         }
@@ -537,10 +418,6 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
-      }
-      accept_waitlist_offer: {
-        Args: { _booking_id: string; _payment_method: string }
-        Returns: Json
       }
       event_quota: {
         Args: never
@@ -585,10 +462,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      submit_booking_transfer_proof: {
-        Args: { _booking_id: string; _proof_path: string }
-        Returns: Json
-      }
       request_booking_change: {
         Args: {
           _booking_id: string
@@ -602,7 +475,6 @@ export type Database = {
           created_at: string
           id: string
           reason: string | null
-          previous_booking_status: string | null
           replacement_name: string | null
           replacement_whatsapp: string | null
           request_type: string
