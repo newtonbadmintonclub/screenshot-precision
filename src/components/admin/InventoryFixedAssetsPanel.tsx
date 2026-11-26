@@ -70,7 +70,6 @@ export function InventoryFixedAssetsPanel() {
     const {data:userData}=await supabase.auth.getUser();
     const {error}=await supabase.from("fixed_asset_maintenance").insert({asset_id:maintenanceAsset.id,maintenance_date:maintenanceDraft.maintenance_date,maintenance_type:maintenanceDraft.maintenance_type,description:maintenanceDraft.description.trim(),cost:Math.max(0,Number(maintenanceDraft.cost)||0),performed_by:maintenanceDraft.performed_by.trim(),next_maintenance_date:maintenanceDraft.next_maintenance_date||null,created_by:userData.user?.id??null});
     if(error) throw error;
-    if(maintenanceDraft.maintenance_type==="perbaikan") { const {error:updateError}=await supabase.from("fixed_assets").update({condition_status:"baik",status:"active",updated_at:new Date().toISOString()}).eq("id",maintenanceAsset.id); if(updateError) throw updateError; }
   },onSuccess:async()=>{await Promise.all([qc.invalidateQueries({queryKey:["admin-fixed-assets"]}),qc.invalidateQueries({queryKey:["admin-fixed-asset-maintenance"]})]);setMaintenanceAsset(null);setMaintenanceDraft({maintenance_date:new Date().toISOString().slice(0,10),maintenance_type:"perawatan",description:"",cost:"0",performed_by:"",next_maintenance_date:""});}});
   const openEdit = (a:Asset) => {setEditing(a);setAssetDraft({...a,serial_number:a.serial_number??"",warranty_expires_at:a.warranty_expires_at??""} as Draft);setAssetOpen(true);};
   const field = "h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700";
