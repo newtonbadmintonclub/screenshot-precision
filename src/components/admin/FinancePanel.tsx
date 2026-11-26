@@ -9,10 +9,12 @@ import { supabase } from "@/lib/newton-client";
 import { useAuth } from "@/hooks/use-auth";
 
 type BookingIncome = { id: string; code: string; player_name: string; amount: number; paid_at: string | null; created_at: string };
-type StoreIncome = { id: string; code: string; product_name: string; total: number; created_at: string };
+type StoreIncome = { id: string; code: string; product_name: string; total: number; paid_at: string; paid_method: string | null; payment_reference: string };
+type UnpaidStoreOrder = { id: string; code: string; product_name: string; quantity: number; total: number; created_at: string; status: string };
+type RefundExpense = { id: string; booking_id: string; amount: number; completed_at: string; external_reference: string | null; reason: string | null };
 type Expense = { id: string; expense_date: string; category: string; description: string; amount: number; vendor: string; payment_method: string; reference: string; notes: string; created_at: string };
 type CostSource = { id: string; amount: number; date: string; label: string };
-type Tab = "overview" | "expenses" | "refunds";
+type Tab = "overview" | "expenses" | "store" | "refunds";
 
 const CATEGORIES = ["Operasional", "Sewa Lapangan", "Perlengkapan", "Transportasi", "Konsumsi", "Marketing", "Utilitas", "Lainnya"];
 const money = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value || 0);
@@ -47,18 +49,22 @@ export function FinancePanel() {
   const finance = useQuery({
     queryKey: ["admin-finance", from, to],
     queryFn: async () => {
-      const [bookings, orders, expenses, purchases, maintenance] = await Promise.all([
+      const [bookings, orders, unpaidOrders, expenses, purchases, maintenance, refunds] = await Promise.all([
         supabase.from("bookings").select("id,code,player_name,amount,paid_at,created_at").eq("status", "confirmed").not("paid_at", "is", null).gte("paid_at", from + "T00:00:00").lte("paid_at", to + "T23:59:59").order("paid_at", { ascending: false }),
-        supabase.from("orders").select("id,code,product_name,total,created_at").eq("status", "selesai").gte("created_at", from + "T00:00:00").lte("created_at", to + "T23:59:59").order("created_at", { ascending: false }),
+        supabase.from("orders").select("id,code,product_name,total,paid_at,paid_method,payment_reference").not("paid_at", "is", null).gte("paid_at", from + "T00:00:00").lte("paid_at", to + "T23:59:59").order("paid_at", { ascending: false }),
+        supabase.from("orders").select("id,code,product_name,quantity,total,created_at,status").is("paid_at", null).neq("status", "dibatalkan").order("created_at", { ascending: false }),
         supabase.from("finance_expenses").select("id,expense_date,category,description,amount,vendor,payment_method,reference,notes,created_at").gte("expense_date", from).lte("expense_date", to).order("expense_date", { ascending: false }),
         supabase.from("inventory_purchases").select("id,purchase_code,total_amount,purchased_at").gte("purchased_at", from).lte("purchased_at", to),
         supabase.from("fixed_asset_maintenance").select("id,cost,maintenance_date,description").gte("maintenance_date", from).lte("maintenance_date", to),
+        supabase.from("refund_requests").select("id,booking_id,amount,completed_at,external_reference,reason").eq("status", "completed").not("completed_at", "is", null).gte("completed_at", from + "T00:00:00").lte("completed_at", to + "T23:59:59"),
       ]);
-      const failed = [bookings, orders, expenses, purchases, maintenance].find((item) => item.error);
+      const failed = [bookings, orders, unpaidOrders, expenses, purchases, maintenance, refunds].find((item) => item.error);
       if (failed?.error) throw failed.error;
       return {
         bookings: (bookings.data ?? []) as BookingIncome[],
         orders: (orders.data ?? []) as StoreIncome[],
+        unpaidOrders: (unpaidOrders.data ?? []) as UnpaidStoreOrder[],
+        refunds: (refunds.data ?? []) as RefundExpense[],
         expenses: (expenses.data ?? []) as Expense[],
         purchases: (purchases.data ?? []).map((r: any) => ({ id: r.id, amount: Number(r.total_amount), date: r.purchased_at, label: r.purchase_code })) as CostSource[],
         maintenance: (maintenance.data ?? []).map((r: any) => ({ id: r.id, amount: Number(r.cost), date: r.maintenance_date, label: r.description })) as CostSource[],
@@ -83,6 +89,13 @@ export function FinancePanel() {
       setDescription(""); setAmount(""); setVendor(""); setReference(""); setNotes(""); setShowForm(false);
     },
   });
+  const recordStorePayment = useMutation({
+    mutationFn: async (input: { orderId: string; method: string; reference: string }) => {
+      const { error } = await supabase.rpc("admin_record_order_payment", { _order_id: input.orderId, _paid_method: input.method, _payment_reference: input.reference });
+      if (error) throw error;
+    },
+    onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["admin-finance"] }); },
+  });
   const deleteExpense = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("finance_expenses").delete().eq("id", id);
@@ -99,8 +112,9 @@ export function FinancePanel() {
     const expense = d.expenses.reduce((s, r) => s + Number(r.amount), 0);
     const purchases = d.purchases.reduce((s, r) => s + r.amount, 0);
     const maintenance = d.maintenance.reduce((s, r) => s + r.amount, 0);
-    const income = booking + store, cost = expense + purchases + maintenance;
-    return { booking, store, expense, purchases, maintenance, refund: 0, income, cost, net: income - cost };
+    const refund = d.refunds.reduce((s, r) => s + Number(r.amount), 0);
+    const income = booking + store, cost = expense + purchases + maintenance + refund;
+    return { booking, store, expense, purchases, maintenance, refund, income, cost, net: income - cost };
   }, [finance.data]);
 
   function exportReport() {
@@ -109,7 +123,8 @@ export function FinancePanel() {
     downloadCsv(`laporan-keuangan-${from}-${to}.csv`, [
       ["Jenis", "Tanggal", "Referensi", "Keterangan", "Kategori", "Pemasukan", "Pengeluaran"],
       ...d.bookings.map((r) => ["Booking", r.paid_at, r.code, r.player_name, "Booking", r.amount, 0]),
-      ...d.orders.map((r) => ["Club Store", r.created_at, r.code, r.product_name, "Penjualan", r.total, 0]),
+      ...d.orders.map((r) => ["Club Store", r.paid_at, r.code, r.product_name, r.paid_method ?? "Penjualan", r.total, 0]),
+      ...d.refunds.map((r) => ["Refund", r.completed_at, r.external_reference ?? r.booking_id, r.reason ?? "Refund selesai", "Pengembalian dana", 0, r.amount]),
       ...d.expenses.map((r) => ["Pengeluaran", r.expense_date, r.reference, r.description, r.category, 0, r.amount]),
       ...d.purchases.map((r) => ["Pembelian Inventaris", r.date, r.label, r.label, "Inventaris", 0, r.amount]),
       ...d.maintenance.map((r) => ["Perawatan Aset", r.date, r.id, r.label, "Perawatan", 0, r.amount]),
@@ -117,7 +132,7 @@ export function FinancePanel() {
     ]);
   }
 
-  const tabs: { id: Tab; label: string }[] = [{ id: "overview", label: "Ringkasan" }, { id: "expenses", label: "Pengeluaran" }, { id: "refunds", label: "Refund" }];
+  const tabs: { id: Tab; label: string }[] = [{ id: "overview", label: "Ringkasan" }, { id: "expenses", label: "Pengeluaran" }, { id: "store", label: "Pembayaran Toko" }, { id: "refunds", label: "Refund" }];
   return <div className="space-y-5">
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div><p className="text-sm text-slate-500">Pantau arus kas berdasarkan transaksi yang tercatat.</p><div className="mt-3 flex flex-wrap gap-2"><label className="text-xs font-semibold text-slate-500">Dari<input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} className="mt-1 block h-9 rounded-lg border border-slate-200 px-2 text-sm text-slate-700" /></label><label className="text-xs font-semibold text-slate-500">Sampai<input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} className="mt-1 block h-9 rounded-lg border border-slate-200 px-2 text-sm text-slate-700" /></label></div></div>
@@ -129,10 +144,10 @@ export function FinancePanel() {
     {tab === "overview" && <div className="space-y-5">
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Total Pemasukan" value={money(totals.income)} icon={<TrendingUp />} tone="bg-emerald-50 text-emerald-600" /><Metric label="Total Pengeluaran" value={money(totals.cost)} icon={<TrendingDown />} tone="bg-orange-50 text-orange-600" /><Metric label="Saldo Bersih Periode" value={money(totals.net)} icon={<Wallet />} tone="bg-sky-50 text-sky-600" /><Metric label="Transaksi Pemasukan" value={(finance.data?.bookings.length ?? 0) + (finance.data?.orders.length ?? 0) + " transaksi"} icon={<ReceiptText />} tone="bg-purple-50 text-purple-600" /></section>
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="text-base text-[#142b4d]">Sumber pemasukan</CardTitle><CardDescription>Hanya booking berstatus terkonfirmasi dengan waktu pembayaran dan pesanan toko berstatus selesai.</CardDescription></CardHeader><CardContent className="space-y-4"><Line label="Booking Mabar" value={totals.booking} total={totals.income} /><Line label="Club Store" value={totals.store} total={totals.income} /></CardContent></Card>
-        <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="text-base text-[#142b4d]">Sumber pengeluaran</CardTitle><CardDescription>Pembelian inventaris dan biaya perawatan aset dihitung terpisah dari pengeluaran operasional manual.</CardDescription></CardHeader><CardContent className="space-y-4"><Line label="Pengeluaran operasional" value={totals.expense} total={totals.cost} /><Line label="Pembelian inventaris" value={totals.purchases} total={totals.cost} /><Line label="Perawatan aset tetap" value={totals.maintenance} total={totals.cost} /></CardContent></Card>
+        <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="text-base text-[#142b4d]">Sumber pemasukan</CardTitle><CardDescription>Booking yang sudah dibayar dan pesanan Club Store dengan pembayaran yang sudah dicatat Admin.</CardDescription></CardHeader><CardContent className="space-y-4"><Line label="Booking Mabar" value={totals.booking} total={totals.income} /><Line label="Club Store" value={totals.store} total={totals.income} /></CardContent></Card>
+        <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="text-base text-[#142b4d]">Sumber pengeluaran</CardTitle><CardDescription>Pembelian inventaris dan biaya perawatan aset dihitung terpisah dari pengeluaran operasional manual.</CardDescription></CardHeader><CardContent className="space-y-4"><Line label="Pengeluaran operasional" value={totals.expense} total={totals.cost} /><Line label="Pembelian inventaris" value={totals.purchases} total={totals.cost} /><Line label="Perawatan aset tetap" value={totals.maintenance} total={totals.cost} /><Line label="Refund selesai" value={totals.refund} total={totals.cost} /></CardContent></Card>
       </div>
-      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="text-base text-[#142b4d]">Transaksi pemasukan terbaru</CardTitle></CardHeader><CardContent className="space-y-3">{[...(finance.data?.bookings ?? []).map((r) => ({ id:r.id, title:r.player_name, ref:r.code, date:r.paid_at ?? r.created_at, amount:Number(r.amount), kind:"Booking" })), ...(finance.data?.orders ?? []).map((r) => ({ id:r.id, title:r.product_name, ref:r.code, date:r.created_at, amount:Number(r.total), kind:"Club Store" }))].sort((a,b) => new Date(b.date).getTime()-new Date(a.date).getTime()).slice(0,8).map((r) => <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 last:border-0"><div><p className="text-sm font-semibold text-slate-800">{r.title}</p><p className="text-xs text-slate-500">{r.kind} • {r.ref} • {new Date(r.date).toLocaleString("id-ID")}</p></div><p className="text-sm font-bold text-emerald-700">+{money(r.amount)}</p></div>)}{!finance.data?.bookings.length && !finance.data?.orders.length && <p className="py-6 text-center text-sm text-slate-500">Belum ada pemasukan terkonfirmasi pada periode ini.</p>}</CardContent></Card>
+      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="text-base text-[#142b4d]">Transaksi pemasukan terbaru</CardTitle></CardHeader><CardContent className="space-y-3">{[...(finance.data?.bookings ?? []).map((r) => ({ id:r.id, title:r.player_name, ref:r.code, date:r.paid_at ?? r.created_at, amount:Number(r.amount), kind:"Booking" })), ...(finance.data?.orders ?? []).map((r) => ({ id:r.id, title:r.product_name, ref:r.code, date:r.paid_at, amount:Number(r.total), kind:"Club Store" }))].sort((a,b) => new Date(b.date).getTime()-new Date(a.date).getTime()).slice(0,8).map((r) => <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 last:border-0"><div><p className="text-sm font-semibold text-slate-800">{r.title}</p><p className="text-xs text-slate-500">{r.kind} • {r.ref} • {new Date(r.date).toLocaleString("id-ID")}</p></div><p className="text-sm font-bold text-emerald-700">+{money(r.amount)}</p></div>)}{!finance.data?.bookings.length && !finance.data?.orders.length && <p className="py-6 text-center text-sm text-slate-500">Belum ada pemasukan terkonfirmasi pada periode ini.</p>}</CardContent></Card>
     </div>}
     {tab === "expenses" && <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-display text-lg font-bold text-[#142b4d]">Catatan pengeluaran operasional</h2><p className="text-xs text-slate-500">Catat biaya di luar pembelian inventaris dan perawatan aset yang sudah direkap otomatis.</p></div><Button size="sm" onClick={() => setShowForm((v) => !v)} className="bg-orange-500 text-white hover:bg-orange-600"><Plus className="mr-1 h-4 w-4" />Catat Pengeluaran</Button></div>
@@ -150,8 +165,9 @@ export function FinancePanel() {
       </form></CardContent></Card>}
       <Card className="overflow-hidden rounded-2xl border-slate-200 bg-white shadow-sm"><CardContent className="p-0">{finance.data?.expenses.length ? <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="bg-slate-50 text-xs text-slate-500"><tr><th className="px-4 py-3">Tanggal</th><th className="px-4 py-3">Deskripsi</th><th className="px-4 py-3">Kategori</th><th className="px-4 py-3">Vendor</th><th className="px-4 py-3 text-right">Nominal</th><th className="px-4 py-3"></th></tr></thead><tbody className="divide-y divide-slate-100">{finance.data.expenses.map((r) => <tr key={r.id}><td className="whitespace-nowrap px-4 py-3 text-slate-500">{r.expense_date}</td><td className="px-4 py-3"><p className="font-semibold text-slate-800">{r.description}</p><p className="text-xs text-slate-500">{r.reference || r.payment_method}</p></td><td className="px-4 py-3"><Badge variant="outline">{r.category}</Badge></td><td className="px-4 py-3 text-slate-600">{r.vendor || "—"}</td><td className="whitespace-nowrap px-4 py-3 text-right font-bold text-slate-800">{money(r.amount)}</td><td className="px-4 py-3 text-right"><Button variant="ghost" size="icon" aria-label="Hapus pengeluaran" disabled={deleteExpense.isPending} onClick={() => { if (window.confirm("Hapus catatan pengeluaran ini?")) deleteExpense.mutate(r.id); }}><Trash2 className="h-4 w-4 text-red-500" /></Button></td></tr>)}</tbody></table></div> : <div className="p-10 text-center text-sm text-slate-500">Belum ada pengeluaran operasional pada periode ini.</div>}</CardContent></Card>
     </div>}
+    {tab === "store" && <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="text-base text-[#142b4d]">Verifikasi pembayaran Club Store</CardTitle><CardDescription>Catat pembayaran hanya setelah dana benar-benar diterima dan diverifikasi.</CardDescription></CardHeader><CardContent className="space-y-3">{finance.data?.unpaidOrders.length ? finance.data.unpaidOrders.map((r) => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3"><div><p className="text-sm font-semibold text-slate-800">{r.product_name} × {r.quantity}</p><p className="text-xs text-slate-500">{r.code} • {r.status} • {new Date(r.created_at).toLocaleDateString("id-ID")}</p></div><div className="flex items-center gap-3"><strong className="text-sm">{money(r.total)}</strong><Button size="sm" variant="outline" disabled={recordStorePayment.isPending} onClick={() => { if (!window.confirm("Pastikan pembayaran pesanan " + r.code + " sebesar " + money(r.total) + " benar-benar sudah diterima.")) return; const method = window.prompt("Metode pembayaran: cash / transfer / qris / other", "transfer")?.trim().toLowerCase(); if (!method || !["cash", "transfer", "qris", "other"].includes(method)) return; const reference = window.prompt("Referensi transaksi (opsional):") ?? ""; recordStorePayment.mutate({ orderId: r.id, method, reference }); }}>Konfirmasi pembayaran</Button></div></div>) : <p className="py-6 text-center text-sm text-slate-500">Tidak ada pesanan yang menunggu pencatatan pembayaran.</p>}{recordStorePayment.isError && <p role="alert" className="text-sm text-red-600">{recordStorePayment.error.message}</p>}</CardContent></Card>}
     {tab === "refunds" && <RefundPanel />}
-    <p className="text-xs leading-relaxed text-slate-400">Catatan akuntansi: pemasukan booking hanya menghitung status confirmed dengan paid_at terisi; Club Store hanya menghitung pesanan selesai. Pengeluaran menggabungkan catatan operasional, penerimaan pembelian inventaris, dan biaya perawatan aset. Refund dipantau pada tab terpisah dan tidak otomatis mengurangi pemasukan sampai pencatatan refund diselesaikan secara manual.</p>
+    <p className="text-xs leading-relaxed text-slate-400">Catatan akuntansi: pemasukan booking hanya menghitung status confirmed dengan paid_at terisi; Club Store hanya menghitung pesanan selesai. Pengeluaran menggabungkan catatan operasional, penerimaan pembelian inventaris, dan biaya perawatan aset. Refund selesai mengurangi saldo berdasarkan completed_at; refund yang baru disetujui atau sedang diproses belum mengurangi saldo.</p>
   </div>;
 }
 
