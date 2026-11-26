@@ -19,7 +19,7 @@ type Movement = {
 };
 const money = (value: number | null) => value == null ? "—" : new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
 const dateTime = (value: string) => new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-const emptyDraft = { sku: "", name: "", category: "Perlengkapan", description: "", unit: "pcs", quantity: "0", minimum_quantity: "0", location: "", condition_status: "baik" as const, unit_cost: "" };
+const emptyDraft = { sku: "", name: "", category: "Perlengkapan", description: "", unit: "pcs", minimum_quantity: "0", location: "", condition_status: "baik" as const, unit_cost: "" };
 
 export function InventoryPanel() {
   const qc = useQueryClient();
@@ -72,7 +72,7 @@ export function InventoryPanel() {
         const { error } = await supabase.from("inventory_items").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("inventory_items").insert({ ...payload, quantity: Math.max(0, Number(draft.quantity) || 0) });
+        const { error } = await supabase.from("inventory_items").insert({ ...payload, quantity: 0 });
         if (error) throw error;
       }
     },
@@ -155,7 +155,6 @@ export function InventoryPanel() {
         <Field label="Satuan"><input required value={draft.unit} onChange={(e) => setDraft({ ...draft, unit: e.target.value })} className="field" placeholder="pcs, set, box" /></Field>
         <Field label="Lokasi Penyimpanan"><input value={draft.location} onChange={(e) => setDraft({ ...draft, location: e.target.value })} className="field" placeholder="Gudang / Court 1" /></Field>
         <Field label="Stok Minimum"><input type="number" min="0" value={draft.minimum_quantity} onChange={(e) => setDraft({ ...draft, minimum_quantity: e.target.value })} className="field" /></Field>
-        {!editing && <Field label="Stok Awal"><input type="number" min="0" value={draft.quantity} onChange={(e) => setDraft({ ...draft, quantity: e.target.value })} className="field" /></Field>}
         <Field label="Harga Perolehan / Unit"><input type="number" min="0" value={draft.unit_cost} onChange={(e) => setDraft({ ...draft, unit_cost: e.target.value })} className="field" placeholder="Opsional" /></Field>
         <Field label="Kondisi"><select value={draft.condition_status} onChange={(e) => setDraft({ ...draft, condition_status: e.target.value as typeof draft.condition_status })} className="field"><option value="baik">Baik</option><option value="perlu_perbaikan">Perlu Perbaikan</option><option value="rusak">Rusak</option></select></Field>
         <Field label="Deskripsi" wide><textarea value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} className="field min-h-20" /></Field>
