@@ -76,3 +76,5 @@ revoke all on function public.inventory_create_loan(text,text,text,text,date,tex
 revoke all on function public.inventory_return_loan_item(uuid,integer,text,text) from public,anon;
 grant execute on function public.inventory_create_loan(text,text,text,text,date,text,jsonb) to authenticated;
 grant execute on function public.inventory_return_loan_item(uuid,integer,text,text) to authenticated;
+
+create index if not exists inventory_loans_actor_idx on public.inventory_loans(actor_id);
