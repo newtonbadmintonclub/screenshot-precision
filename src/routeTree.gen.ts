@@ -19,6 +19,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as AuthenticatedNotifikasiRouteImport } from './routes/_authenticated/notifikasi'
 import { Route as AuthenticatedTiketRouteImport } from './routes/_authenticated/tiket'
+import { Route as ProductHandleRouteImport } from './routes/product/$handle'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as ApiPublicXenditWebhookRouteImport } from './routes/api/public/xendit-webhook'
 import { Route as AuthenticatedAdminAiSyncIndexRouteImport } from './routes/_authenticated/admin/ai-sync/index'
@@ -73,6 +74,11 @@ const AuthenticatedTiketRoute = AuthenticatedTiketRouteImport.update({
   path: '/tiket',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ProductHandleRoute = ProductHandleRouteImport.update({
+  id: '/product/$handle',
+  path: '/product/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/store': typeof StoreRoute
   '/notifikasi': typeof AuthenticatedNotifikasiRoute
   '/tiket': typeof AuthenticatedTiketRoute
+  '/product/$handle': typeof ProductHandleRoute
   '/api/public/xendit-webhook': typeof ApiPublicXenditWebhookRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/ai-sync/setup': typeof AuthenticatedAdminAiSyncSetupRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/store': typeof StoreRoute
   '/notifikasi': typeof AuthenticatedNotifikasiRoute
   '/tiket': typeof AuthenticatedTiketRoute
+  '/product/$handle': typeof ProductHandleRoute
   '/api/public/xendit-webhook': typeof ApiPublicXenditWebhookRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/ai-sync/setup': typeof AuthenticatedAdminAiSyncSetupRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/store': typeof StoreRoute
   '/_authenticated/notifikasi': typeof AuthenticatedNotifikasiRoute
   '/_authenticated/tiket': typeof AuthenticatedTiketRoute
+  '/product/$handle': typeof ProductHandleRoute
   '/api/public/xendit-webhook': typeof ApiPublicXenditWebhookRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/ai-sync/setup': typeof AuthenticatedAdminAiSyncSetupRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/store'
     | '/notifikasi'
     | '/tiket'
+    | '/product/$handle'
     | '/api/public/xendit-webhook'
     | '/admin/'
     | '/admin/ai-sync/setup'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/store'
     | '/notifikasi'
     | '/tiket'
+    | '/product/$handle'
     | '/api/public/xendit-webhook'
     | '/admin'
     | '/admin/ai-sync/setup'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/store'
     | '/_authenticated/notifikasi'
     | '/_authenticated/tiket'
+    | '/product/$handle'
     | '/api/public/xendit-webhook'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/ai-sync/setup'
@@ -201,6 +213,7 @@ export interface RootRouteChildren {
   KomunitasRoute: typeof KomunitasRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StoreRoute: typeof StoreRoute
+  ProductHandleRoute: typeof ProductHandleRoute
   ApiPublicXenditWebhookRoute: typeof ApiPublicXenditWebhookRoute
 }
 
@@ -276,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTiketRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/product/$handle': {
+      id: '/product/$handle'
+      path: '/product/$handle'
+      fullPath: '/product/$handle'
+      preLoaderRoute: typeof ProductHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/admin'
@@ -335,6 +355,7 @@ const rootRouteChildren: RootRouteChildren = {
   KomunitasRoute: KomunitasRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StoreRoute: StoreRoute,
+  ProductHandleRoute: ProductHandleRoute,
   ApiPublicXenditWebhookRoute: ApiPublicXenditWebhookRoute,
 }
 export const routeTree = rootRouteImport
